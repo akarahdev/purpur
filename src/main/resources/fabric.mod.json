@@ -1,0 +1,28 @@
+{
+  "schemaVersion": 1,
+  "id": "purpur",
+  "version": "${version}",
+  "name": "purpur",
+  "description": "",
+  "authors": [],
+  "contact": {},
+  "license": "MIT",
+  "icon": "assets/purpur/icon.png",
+  "environment": "client",
+  "entrypoints": {
+    "client": [
+      "dev.akarah.purpur.client.PurpurClient"
+    ],
+    "main": [
+      "dev.akarah.purpur.Purpur"
+    ]
+  },
+  "mixins": [
+    "purpur.mixins.json"
+  ],
+  "depends": {
+    "fabricloader": ">=${loader_version}",
+    "fabric-api": "*",
+    "minecraft": "${minecraft_version}"
+  }
+}
