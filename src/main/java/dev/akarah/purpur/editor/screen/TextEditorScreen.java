@@ -1,11 +1,9 @@
 package dev.akarah.purpur.editor.screen;
 
-import dev.dfonline.flint.Flint;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.Font;
+import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.components.MultiLineEditBox;
 import net.minecraft.client.gui.components.MultiLineTextWidget;
-import net.minecraft.client.gui.components.MultilineTextField;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.input.CharacterEvent;
 import net.minecraft.client.input.KeyEvent;
@@ -21,22 +19,46 @@ public class TextEditorScreen extends Screen {
 
     @Override
     protected void init() {
-        super.init();
+        this.clearWidgets();
 
-        assert Minecraft.getInstance().screen != null;
-        var offX = (int) (((double) Minecraft.getInstance().screen.width) * 0.2);
-        var offY = (int) (((double) Minecraft.getInstance().screen.height) * 0.2);
-        System.out.println(offX);
-        System.out.println(offY);
+        int offX = (int) (((double) this.width) * 0.15);
+        int offY = (int) (((double) this.height) * 0.1);
+
         this.editBox = MultiLineEditBox.builder()
                 .setX(offX)
                 .setY(offY)
                 .build(
                         Minecraft.getInstance().font,
-                        Minecraft.getInstance().screen.width - (offX * 2),
-                        Minecraft.getInstance().screen.height - (offY * 2),
+                        this.width - (offX * 2),
+                        this.height - (offY * 2),
                         Component.literal("meow")
                 );
+
+        int buttonY = offY;
+        for(int i = 0; i < 11; i++) {
+            var button = Button.builder(Component.literal("Tab"), bt -> {})
+                    .pos(offX / 6, buttonY)
+                    .width(offX * 2 / 3)
+                    .build();
+            buttonY += button.getHeight() + 4;
+            this.addRenderableWidget(button);
+        }
+
+        var text = new MultiLineTextWidget(
+                offX,
+                offY / 2,
+                Component.literal("Current Open File:"),
+                Minecraft.getInstance().font
+        );
+        this.addRenderableWidget(text);
+
+        this.addRenderableWidget(
+                Button.builder(Component.literal("Reload"), button -> {
+                    this.init();
+                })
+                        .width(200)
+                        .pos((this.width / 2) - 100,offY + editBox.getHeight() + 15).build()
+        );
 
         this.addRenderableWidget(this.editBox);
     }
