@@ -1,13 +1,18 @@
 package dev.akarah.purpur;
 
-import com.google.gson.Gson;
-import dev.dfonline.flint.Flint;
+import dev.akarah.purpur.editor.TextEditorCommandsFeature;
+import dev.dfonline.flint.FlintAPI;
+import net.fabricmc.api.ClientModInitializer;
 import net.fabricmc.api.ModInitializer;
-import net.minecraft.client.Minecraft;
 
-public class Purpur implements ModInitializer {
+public class Purpur implements ModInitializer, ClientModInitializer {
     @Override
     public void onInitialize() {
 
+    }
+
+    @Override
+    public void onInitializeClient() {
+        FlintAPI.registerFeature(new TextEditorCommandsFeature());
     }
 }

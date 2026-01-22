@@ -11,7 +11,7 @@
   "environment": "client",
   "entrypoints": {
     "client": [
-      "dev.akarah.purpur.client.PurpurClient"
+      "dev.akarah.purpur.Purpur"
     ],
     "main": [
       "dev.akarah.purpur.Purpur"
