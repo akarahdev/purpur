@@ -10,16 +10,18 @@ base {
     archivesName.set(project.property("archives_base_name") as String)
 }
 
+val usingLocal = true
+
 repositories {
-    exclusiveContent {
-        forRepository {
-            maven {
-                name = "Modrinth"
-                url = uri("https://api.modrinth.com/maven")
-            }
-        }
-        filter {
-            includeGroup("maven.modrinth");
+    mavenCentral()
+    maven {
+        name = "Modrinth"
+        url = uri("https://api.modrinth.com/maven")
+    }
+    if(usingLocal) {
+        mavenLocal()
+        maven {
+            url = uri("https://pkgs.dev.azure.com/djtheredstoner/DevAuth/_packaging/public/maven/v1")
         }
     }
 }
@@ -32,7 +34,11 @@ dependencies {
     modImplementation("net.fabricmc:fabric-loader:${project.property("loader_version")}")
     modImplementation("net.fabricmc.fabric-api:fabric-api:${project.property("fabric_version")}")
 
-    modApi("maven.modrinth:flint:${project.property("flint_version")}")
+    if (usingLocal) {
+        modApi("io.github.redvortexdev:Flint:1.0.0")
+    } else {
+        modApi("maven.modrinth:flint:${project.property("flint_version")}")
+    }
     modImplementation("net.kyori:adventure-platform-fabric:${project.property("adventure_fabric_version")}")
 }
 
