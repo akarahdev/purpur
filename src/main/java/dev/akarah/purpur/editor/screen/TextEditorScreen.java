@@ -14,7 +14,7 @@ public class TextEditorScreen extends Screen {
     private static final TextEditorScreen INSTANCE = new TextEditorScreen(Component.literal("Text Editor"));
 
     boolean initialized = false;
-    MultiLineEditBox editBox;
+    EditorBox editBox;
 
     private TextEditorScreen(Component component) {
         super(component);
@@ -32,15 +32,7 @@ public class TextEditorScreen extends Screen {
         int offX = (int) (((double) this.width) * 0.15);
         int offY = (int) (((double) this.height) * 0.1);
 
-        this.editBox = MultiLineEditBox.builder()
-                .setX(offX)
-                .setY(offY)
-                .build(
-                        Minecraft.getInstance().font,
-                        this.width - (offX * 2),
-                        this.height - (offY * 2),
-                        Component.literal("meow")
-                );
+        this.editBox = new EditorBox(offX, offY, this.width - (offX * 2), this.height - (offY * 2));
 
         int buttonY = offY;
         for(int i = 0; i < 11; i++) {
@@ -79,11 +71,16 @@ public class TextEditorScreen extends Screen {
                         new CharacterEvent(0x0020, 0)
                 );
             }
+            return true;
         }
         return super.keyPressed(keyEvent);
     }
 
     public void setContents(String contents) {
         this.editBox.setValue(contents);
+    }
+
+    public static void resetInstance() {
+        INSTANCE.initialized = false;
     }
 }

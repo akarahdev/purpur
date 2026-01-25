@@ -1,0 +1,11 @@
+{
+  "providers": [
+    {
+      "type": "ttf",
+      "file": "purpur:font/firacode_regular.ttf",
+      "shift": [0, 0],
+      "size": 11,
+      "oversample": 1.0
+    }
+  ]
+}

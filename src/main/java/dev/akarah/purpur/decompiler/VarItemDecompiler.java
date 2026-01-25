@@ -29,6 +29,13 @@ public class VarItemDecompiler {
                             locationArgument.getPitch(),
                             locationArgument.getYaw()
                     );
+            case ParameterArgument parameterArgument -> new AST.Value.ParameterLiteral(
+                    parameterArgument.getName(),
+                    parameterArgument.getType().name,
+                    parameterArgument.isPlural(),
+                    parameterArgument.isOptional(),
+                    parameterArgument.getDefaultValue() == null ? null : decompile(parameterArgument.getDefaultValue())
+            );
             default -> new AST.Value.UnknownVarItem();
         };
     }

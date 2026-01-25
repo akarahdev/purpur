@@ -1,5 +1,7 @@
 package dev.akarah.purpur.ast;
 
+import org.jspecify.annotations.Nullable;
+
 import java.util.List;
 import java.util.Optional;
 
@@ -11,6 +13,8 @@ public sealed interface AST {
     ) implements AST {
         @Override
         public void lowerToParsable(StringBuilder builder, int depth) {
+            builder.append("\n");
+            builder.append(" ".repeat(depth));
             builder.append("{");
             for(var cb : this.statements) {
                 builder.append("\n");
@@ -32,37 +36,62 @@ public sealed interface AST {
 
         @Override
         public void lowerToParsable(StringBuilder builder, int depth) {
+
             invoking.lowerToParsable(builder, depth);
+
+
             builder.append("(");
+
+            var msb = new StringBuilder();
             int idx = 0;
             for(var arg : arguments) {
-                arg.lowerToParsable(builder, depth);
+                arg.lowerToParsable(msb, depth);
                 idx += 1;
                 if(idx != arguments.size()) {
-                    builder.append(", ");
+                    msb.append(", ");
                 }
             }
+
+            var msbOut = msb.toString();
+            if(msbOut.length() > 80) {
+                var lines = msbOut.split(", ");
+                builder.append("\n");
+                for(var line : lines) {
+                    builder.append(" ".repeat(depth + AST.TAB_SPACES_LENGTH)).append(line).append(",\n");
+                }
+                builder.append(" ".repeat(depth));
+            } else {
+                builder.append(msbOut);
+            }
+
             builder.append(")");
 
-            this.childBlock.ifPresent(cbs -> {
-                builder.append(" ");
-                cbs.lowerToParsable(builder, depth);
-            });
+            this.childBlock.ifPresentOrElse(
+                    cbs -> {
+                        builder.append(" ");
+                        cbs.lowerToParsable(builder, depth);
+                    },
+                    () -> builder.append(";")
+            );
         }
     }
 
     sealed interface Value extends AST {
         record Variable(String name, String scope) implements Value {
+            public static boolean charIsAllowedInIdentifier(int c) {
+                return Character.isAlphabetic(c) || Character.isDigit(c) || c == '_' || c == '.';
+            }
+
             @Override
             public void lowerToParsable(StringBuilder builder, int depth) {
-                var wrapIdent = name.chars().anyMatch(x -> !(Character.isAlphabetic(x) && Character.isDigit(x)));
+                var wrapIdent = name.chars()
+                        .noneMatch(Variable::charIsAllowedInIdentifier);
                 switch (scope) {
                     case "line" -> {}
-                    case "local" -> builder.append("local");
+                    case "local" -> builder.append("local ");
                     case "unsaved", "game" -> builder.append("game ");
                     case "saved" -> builder.append("saved ");
                 }
-                if(!scope.equals("line")) builder.append(scope).append(" ");
                 if(wrapIdent) builder.append("`");
                 builder.append(name);
                 if(wrapIdent) builder.append("`");
@@ -125,6 +154,21 @@ public sealed interface AST {
                         .append(", ")
                         .append(z)
                         .append(")");
+            }
+        }
+
+        record ParameterLiteral(String name, String type, boolean plural, boolean optional, @Nullable Value defaultValue) implements Value {
+            @Override
+            public void lowerToParsable(StringBuilder builder, int depth) {
+                builder.append(name)
+                        .append(": ")
+                        .append(type);
+                if(plural) builder.append("...");
+                if(optional) builder.append("?");
+                if(defaultValue != null) {
+                    builder.append(" = ");
+                    defaultValue.lowerToParsable(builder, depth);
+                }
             }
         }
 

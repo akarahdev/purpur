@@ -43,6 +43,11 @@ public class TextEditorCommandsFeature implements CommandFeature {
                     });
                     return 0;
                 })
+        ).then(
+                ClientCommandManager.literal("reset").executes(ctx -> {
+                    Minecraft.getInstance().schedule(TextEditorScreen::resetInstance);
+                    return 0;
+                })
         );
     }
 }

@@ -10,6 +10,10 @@ base {
     archivesName.set(project.property("archives_base_name") as String)
 }
 
+loom {
+    accessWidenerPath = file("src/main/resources/purpur.accesswidener")
+}
+
 val usingLocal = true
 
 repositories {

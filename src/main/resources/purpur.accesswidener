@@ -1,0 +1,14 @@
+accessWidener v2 named
+accessible field net/minecraft/client/Minecraft fontManager Lnet/minecraft/client/gui/font/FontManager;
+accessible field net/minecraft/client/gui/components/MultiLineEditBox placeholder Lnet/minecraft/network/chat/Component;
+accessible field net/minecraft/client/gui/components/MultiLineEditBox PLACEHOLDER_TEXT_COLOR I
+accessible field net/minecraft/client/gui/components/MultiLineEditBox cursorColor I
+accessible field net/minecraft/client/gui/components/MultiLineEditBox textColor I
+accessible field net/minecraft/client/gui/components/MultiLineEditBox textShadow Z
+accessible method net/minecraft/client/gui/components/MultilineTextField$StringView beginIndex ()I
+accessible method net/minecraft/client/gui/components/MultilineTextField$StringView endIndex ()I
+accessible class net/minecraft/client/gui/components/MultilineTextField$StringView
+accessible field net/minecraft/client/gui/components/MultiLineEditBox focusedTime J
+accessible field net/minecraft/client/gui/components/MultiLineEditBox font Lnet/minecraft/client/gui/Font;
+accessible field net/minecraft/client/gui/components/MultiLineEditBox textField Lnet/minecraft/client/gui/components/MultilineTextField;
+accessible method net/minecraft/client/gui/components/MultiLineEditBox <init> (Lnet/minecraft/client/gui/Font;IIIILnet/minecraft/network/chat/Component;Lnet/minecraft/network/chat/Component;IZIZZ)V

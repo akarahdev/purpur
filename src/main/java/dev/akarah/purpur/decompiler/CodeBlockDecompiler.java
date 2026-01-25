@@ -4,6 +4,8 @@ import com.google.common.collect.Lists;
 import dev.akarah.purpur.ast.AST;
 import dev.akarah.purpur.mappings.MappingsRepository;
 import dev.dfonline.flint.templates.CodeBlock;
+import dev.dfonline.flint.templates.codeblock.*;
+import dev.dfonline.flint.templates.codeblock.Process;
 import dev.dfonline.flint.templates.codeblock.abstracts.CodeBlockAction;
 
 import java.util.List;
@@ -50,6 +52,64 @@ public class CodeBlockDecompiler {
 
     public static AST.Invoke decompile(CodeBlock codeBlock) {
         switch (codeBlock) {
+            case Function function -> {
+                return new AST.Invoke(
+                        new AST.Value.Variable("func." + function.getFunctionName(), "line"),
+                        function.getArguments().getOrderedList()
+                                .stream()
+                                .map(VarItemDecompiler::decompile)
+                                .toList(),
+                        Optional.empty()
+                );
+            }
+            case Process process -> {
+                return new AST.Invoke(
+                        new AST.Value.Variable("proc." + process.getProcessName(), "line"),
+                        process.getArguments().getOrderedList()
+                                .stream()
+                                .map(VarItemDecompiler::decompile)
+                                .toList(),
+                        Optional.empty()
+                );
+            }
+            case CallFunction callFunction -> {
+                return new AST.Invoke(
+                        new AST.Value.Variable("func." + callFunction.getData(), "line"),
+                        callFunction.getArguments().getOrderedList()
+                                .stream()
+                                .map(VarItemDecompiler::decompile)
+                                .toList(),
+                        Optional.empty()
+                );
+            }
+            case StartProcess startProcess -> {
+                return new AST.Invoke(
+                        new AST.Value.Variable("proc." + startProcess.getData(), "line"),
+                        startProcess.getArguments().getOrderedList()
+                                .stream()
+                                .map(VarItemDecompiler::decompile)
+                                .toList(),
+                        Optional.empty()
+                );
+            }
+            case PlayerEvent playerEvent -> {
+                var dfName = new MappingsRepository.DfName("PLAYER EVENT", playerEvent.getAction());
+                var scriptName = MappingsRepository.get().getScriptName(dfName);
+                return new AST.Invoke(
+                        new AST.Value.Variable(scriptName.name(), "line"),
+                        List.of(),
+                        Optional.empty()
+                );
+            }
+            case EntityEvent entityEvent -> {
+                var dfName = new MappingsRepository.DfName("ENTITY EVENT", entityEvent.getAction());
+                var scriptName = MappingsRepository.get().getScriptName(dfName);
+                return new AST.Invoke(
+                        new AST.Value.Variable(scriptName.name(), "line"),
+                        List.of(),
+                        Optional.empty()
+                );
+            }
             case CodeBlockAction action -> {
                 var dfName = new MappingsRepository.DfName(idToFancyName(action.getBlock()), action.getAction());
                 var scriptName = MappingsRepository.get().getScriptName(dfName);
@@ -59,6 +119,13 @@ public class CodeBlockDecompiler {
                                 .stream()
                                 .map(VarItemDecompiler::decompile)
                                 .toList(),
+                        Optional.empty()
+                );
+            }
+            case Else elseBlock -> {
+                return new AST.Invoke(
+                        new AST.Value.Variable("else", "line"),
+                        List.of(),
                         Optional.empty()
                 );
             }
