@@ -52,11 +52,20 @@ public sealed interface AST {
     }
 
     sealed interface Value extends AST {
-        record Variable(String name, String scope) implements AST {
+        record Variable(String name, String scope) implements Value {
             @Override
             public void lowerToParsable(StringBuilder builder, int depth) {
+                var wrapIdent = name.chars().anyMatch(x -> !(Character.isAlphabetic(x) && Character.isDigit(x)));
+                switch (scope) {
+                    case "line" -> {}
+                    case "local" -> builder.append("local");
+                    case "unsaved", "game" -> builder.append("game ");
+                    case "saved" -> builder.append("saved ");
+                }
                 if(!scope.equals("line")) builder.append(scope).append(" ");
+                if(wrapIdent) builder.append("`");
                 builder.append(name);
+                if(wrapIdent) builder.append("`");
             }
         }
 
@@ -68,6 +77,54 @@ public sealed interface AST {
                 } else {
                     builder.append(literal);
                 }
+            }
+        }
+
+        record StringLiteral(String literal) implements Value {
+            @Override
+            public void lowerToParsable(StringBuilder builder, int depth) {
+                builder.append("\"");
+                builder.append(this.literal.replace("\"", "\\\""));
+                builder.append("\"");
+            }
+        }
+
+        record ComponentLiteral(String literal) implements Value {
+            @Override
+            public void lowerToParsable(StringBuilder builder, int depth) {
+                builder.append("$\"");
+                builder.append(this.literal.replace("\"", "\\\""));
+                builder.append("\"");
+            }
+        }
+
+        record LocationLiteral(double x, double y, double z, double pitch, double yaw) implements Value {
+            @Override
+            public void lowerToParsable(StringBuilder builder, int depth) {
+                builder.append("loc(")
+                        .append(x)
+                        .append(", ")
+                        .append(y)
+                        .append(", ")
+                        .append(z)
+                        .append(", ")
+                        .append(pitch)
+                        .append(", ")
+                        .append(yaw)
+                        .append(")");
+            }
+        }
+
+        record VecLiteral(double x, double y, double z) implements Value {
+            @Override
+            public void lowerToParsable(StringBuilder builder, int depth) {
+                builder.append("loc(")
+                        .append(x)
+                        .append(", ")
+                        .append(y)
+                        .append(", ")
+                        .append(z)
+                        .append(")");
             }
         }
 
