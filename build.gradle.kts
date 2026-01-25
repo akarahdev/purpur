@@ -40,6 +40,8 @@ dependencies {
         modApi("maven.modrinth:flint:${project.property("flint_version")}")
     }
     modImplementation("net.kyori:adventure-platform-fabric:${project.property("adventure_fabric_version")}")
+
+    implementation("org.apache.commons:commons-text:1.15.0")
 }
 
 tasks.processResources {

@@ -5,8 +5,8 @@ import com.mojang.authlib.minecraft.client.MinecraftClient;
 import com.mojang.brigadier.builder.LiteralArgumentBuilder;
 import com.mojang.serialization.JsonOps;
 import dev.akarah.purpur.editor.screen.TextEditorScreen;
-import dev.akarah.purpur.template.CodeTemplate;
 import dev.dfonline.flint.feature.trait.CommandFeature;
+import dev.dfonline.flint.templates.Template;
 import net.fabricmc.fabric.api.client.command.v2.ClientCommandManager;
 import net.fabricmc.fabric.api.client.command.v2.FabricClientCommandSource;
 import net.minecraft.client.Minecraft;
@@ -34,12 +34,7 @@ public class TextEditorCommandsFeature implements CommandFeature {
                 ClientCommandManager.literal("template").executes(ctx -> {
                     Minecraft.getInstance().schedule(() -> {
                         var is = Minecraft.getInstance().player.getMainHandItem();
-                        var jsonStr = is.get(DataComponents.CUSTOM_DATA).copyTag()
-                                .getCompound("PublicBukkitValues").orElseThrow()
-                                .getString("hypercube:codetemplatedata").orElseThrow();
-                        var json = JsonParser.parseString(jsonStr);
-                        ctx.getSource().sendFeedback(Component.literal(jsonStr));
-                        var encoded = CodeTemplate.CODEC.parse(JsonOps.INSTANCE, json).getOrThrow();
+                        var encoded = Template.fromItem(is);
                         ctx.getSource().sendFeedback(Component.literal(
                                 String.valueOf(encoded)
                         ));
