@@ -23,13 +23,23 @@ public class EditorBox extends MultiLineEditBox {
                 ),
                 // identifiers
                 new HighlightGroup(
-                        Pattern.compile("([a-zA-Z_0-9?]+)"),
+                        Pattern.compile("([a-zA-Z_0-9?./:]+)"),
                         ARGB.color(255, 255, 200, 255)
                 ),
                 // namespaces
                 new HighlightGroup(
-                        Pattern.compile("(repeat|func|player|entity|game|Event|control|vars|ifVars|proc|selectObject)(?=\\.)"),
+                        Pattern.compile("(repeat|func|player|ifPlayer|entity|ifEntity|game|ifGame|Event|control|vars|ifVars|proc|select)(?=\\.)"),
                         ARGB.color(255, 255, 100, 100)
+                ),
+                // pseudo functions
+                new HighlightGroup(
+                        Pattern.compile("(?<=[ (,])(item|loc)(?=\\()"),
+                        ARGB.color(255, 170, 170, 255)
+                ),
+                // special syntaxes
+                new HighlightGroup(
+                        Pattern.compile("(?<=[ (,])(tag|gamevalue) "),
+                        ARGB.color(255, 170, 170, 255)
                 ),
                 // functions after namespaces
                 new HighlightGroup(
@@ -38,7 +48,7 @@ public class EditorBox extends MultiLineEditBox {
                 ),
                 // scopes
                 new HighlightGroup(
-                        Pattern.compile("(game|local|line|saved) (?=[a-zA-Z_0-9?/]*)"),
+                        Pattern.compile("(game|local|line|saved|tag) (?=[a-zA-Z_0-9?/]*)"),
                         ARGB.color(255, 170, 170, 255)
                 ),
                 // strings
@@ -50,7 +60,6 @@ public class EditorBox extends MultiLineEditBox {
     }
 
     public EditorBox(int offX, int offY, int sizeX, int sizeY) {
-
         super(
                 Minecraft.getInstance().font,
                 offX,
@@ -172,5 +181,10 @@ public class EditorBox extends MultiLineEditBox {
         if (this.isHovered()) {
             guiGraphics.requestCursor(CursorTypes.IBEAM);
         }
+    }
+
+    @Override
+    protected double scrollRate() {
+        return super.scrollRate() * 2;
     }
 }

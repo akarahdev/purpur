@@ -4,6 +4,7 @@ import com.mojang.brigadier.builder.LiteralArgumentBuilder;
 import dev.akarah.purpur.decompiler.BracketManager;
 import dev.akarah.purpur.decompiler.CodeBlockDecompiler;
 import dev.akarah.purpur.editor.screen.TextEditorScreen;
+import dev.akarah.purpur.mappings.MappingsRepository;
 import dev.dfonline.flint.feature.trait.CommandFeature;
 import dev.dfonline.flint.templates.Template;
 import net.fabricmc.fabric.api.client.command.v2.ClientCommandManager;
@@ -37,7 +38,6 @@ public class TextEditorCommandsFeature implements CommandFeature {
                         var sb = new StringBuilder();
                         decompiled.lowerToParsable(sb, 0);
 
-                        ctx.getSource().sendFeedback(Component.literal(sb.toString()));
                         Minecraft.getInstance().setScreenAndShow(TextEditorScreen.getInstance());
                         TextEditorScreen.getInstance().setContents(sb.toString());
                     });
@@ -46,6 +46,11 @@ public class TextEditorCommandsFeature implements CommandFeature {
         ).then(
                 ClientCommandManager.literal("reset").executes(ctx -> {
                     Minecraft.getInstance().schedule(TextEditorScreen::resetInstance);
+                    return 0;
+                })
+        ).then(
+                ClientCommandManager.literal("reloadmappings").executes(ctx -> {
+                    MappingsRepository.init();
                     return 0;
                 })
         );

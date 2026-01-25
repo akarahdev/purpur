@@ -1,6 +1,7 @@
 package dev.akarah.purpur.decompiler;
 
 import dev.akarah.purpur.ast.AST;
+import dev.akarah.purpur.mappings.MappingsRepository;
 import dev.dfonline.flint.templates.argument.*;
 import dev.dfonline.flint.templates.argument.abstracts.Argument;
 
@@ -36,6 +37,20 @@ public class VarItemDecompiler {
                     parameterArgument.isOptional(),
                     parameterArgument.getDefaultValue() == null ? null : decompile(parameterArgument.getDefaultValue())
             );
+            case TagArgument tagArgument -> {
+                var tag = MappingsRepository.get().getScriptTag(new MappingsRepository.DfBlockTag(tagArgument.getTag(), tagArgument.getOption()));
+                yield new AST.Value.TagLiteral(tag.tag(), tag.option());
+            }
+            case GameValueArgument gameValueArgument -> {
+                System.out.println(gameValueArgument.getType());
+                System.out.println(gameValueArgument.getTarget().name());
+                System.out.println(new MappingsRepository.DfGameValue(gameValueArgument.getType(),  gameValueArgument.getTarget().name()));
+                System.out.println(MappingsRepository.get().getScriptGameValue(new MappingsRepository.DfGameValue(gameValueArgument.getType(),  gameValueArgument.getTarget().name())));
+                var tag = MappingsRepository.get().getScriptGameValue(new MappingsRepository.DfGameValue(gameValueArgument.getType(),  gameValueArgument.getTarget().name()));
+                yield new AST.Value.GameValue(tag.option(), tag.target());
+            }
+            case ItemArgument itemArgument -> new AST.Value.ItemStackVarItem(itemArgument.getItem());
+            case HintArgument hintArgument -> new AST.Value.HintVarItem();
             default -> new AST.Value.UnknownVarItem();
         };
     }

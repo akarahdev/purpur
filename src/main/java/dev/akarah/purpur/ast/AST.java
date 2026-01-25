@@ -1,7 +1,9 @@
 package dev.akarah.purpur.ast;
 
+import net.minecraft.world.item.ItemStack;
 import org.jspecify.annotations.Nullable;
 
+import java.awt.*;
 import java.util.List;
 import java.util.Optional;
 
@@ -54,11 +56,16 @@ public sealed interface AST {
 
             var msbOut = msb.toString();
             if(msbOut.length() > 80) {
-                var lines = msbOut.split(", ");
-                builder.append("\n");
-                for(var line : lines) {
-                    builder.append(" ".repeat(depth + AST.TAB_SPACES_LENGTH)).append(line).append(",\n");
+                var nsb = new StringBuilder();
+                int idx2 = 0;
+                for(var arg : arguments) {
+                    arg.lowerToParsable(nsb, depth);
+                    idx2 += 1;
+                    if(idx2 != arguments.size()) {
+                        nsb.append(", ").append("\n").append(" ".repeat(depth + TAB_SPACES_LENGTH));
+                    }
                 }
+                builder.append(nsb).append("\n");
                 builder.append(" ".repeat(depth));
             } else {
                 builder.append(msbOut);
@@ -127,6 +134,16 @@ public sealed interface AST {
             }
         }
 
+        record TagLiteral(String tag, String option) implements Value {
+            @Override
+            public void lowerToParsable(StringBuilder builder, int depth) {
+                builder.append("tag ");
+                builder.append(tag);
+                builder.append(".");
+                builder.append(option);
+            }
+        }
+
         record LocationLiteral(double x, double y, double z, double pitch, double yaw) implements Value {
             @Override
             public void lowerToParsable(StringBuilder builder, int depth) {
@@ -169,6 +186,34 @@ public sealed interface AST {
                     builder.append(" = ");
                     defaultValue.lowerToParsable(builder, depth);
                 }
+            }
+        }
+
+        record ItemStackVarItem(ItemStack item) implements Value {
+            @Override
+            public void lowerToParsable(StringBuilder builder, int depth) {
+                builder.append("item(")
+                        .append(item.getItemHolder().unwrapKey().orElseThrow().identifier())
+                        .append(", ")
+                        .append(item.getCount())
+                        .append(")");
+            }
+        }
+
+        record GameValue(String target, String value) implements Value {
+            @Override
+            public void lowerToParsable(StringBuilder builder, int depth) {
+                builder.append("gamevalue ")
+                        .append(target)
+                        .append(".")
+                        .append(value);
+            }
+        }
+
+        record HintVarItem() implements Value {
+            @Override
+            public void lowerToParsable(StringBuilder builder, int depth) {
+                builder.append("hint");
             }
         }
 

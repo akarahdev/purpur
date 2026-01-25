@@ -93,8 +93,8 @@ public class CodeBlockDecompiler {
                 );
             }
             case PlayerEvent playerEvent -> {
-                var dfName = new MappingsRepository.DfName("PLAYER EVENT", playerEvent.getAction());
-                var scriptName = MappingsRepository.get().getScriptName(dfName);
+                var dfName = new MappingsRepository.DfFunction("PLAYER EVENT", playerEvent.getAction());
+                var scriptName = MappingsRepository.get().getScriptFunction(dfName);
                 return new AST.Invoke(
                         new AST.Value.Variable(scriptName.name(), "line"),
                         List.of(),
@@ -102,8 +102,8 @@ public class CodeBlockDecompiler {
                 );
             }
             case EntityEvent entityEvent -> {
-                var dfName = new MappingsRepository.DfName("ENTITY EVENT", entityEvent.getAction());
-                var scriptName = MappingsRepository.get().getScriptName(dfName);
+                var dfName = new MappingsRepository.DfFunction("ENTITY EVENT", entityEvent.getAction());
+                var scriptName = MappingsRepository.get().getScriptFunction(dfName);
                 return new AST.Invoke(
                         new AST.Value.Variable(scriptName.name(), "line"),
                         List.of(),
@@ -111,8 +111,8 @@ public class CodeBlockDecompiler {
                 );
             }
             case CodeBlockAction action -> {
-                var dfName = new MappingsRepository.DfName(idToFancyName(action.getBlock()), action.getAction());
-                var scriptName = MappingsRepository.get().getScriptName(dfName);
+                var dfName = new MappingsRepository.DfFunction(idToFancyName(action.getBlock()), action.getAction());
+                var scriptName = MappingsRepository.get().getScriptFunction(dfName);
                 return new AST.Invoke(
                         new AST.Value.Variable(scriptName.name(), "line"),
                         action.getArguments().getOrderedList()
