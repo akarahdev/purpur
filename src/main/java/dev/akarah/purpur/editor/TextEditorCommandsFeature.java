@@ -4,6 +4,7 @@ import com.google.gson.JsonParser;
 import com.mojang.authlib.minecraft.client.MinecraftClient;
 import com.mojang.brigadier.builder.LiteralArgumentBuilder;
 import com.mojang.serialization.JsonOps;
+import dev.akarah.purpur.decompiler.Decompiler;
 import dev.akarah.purpur.editor.screen.TextEditorScreen;
 import dev.dfonline.flint.feature.trait.CommandFeature;
 import dev.dfonline.flint.templates.Template;
@@ -26,7 +27,7 @@ public class TextEditorCommandsFeature implements CommandFeature {
         return literalArgumentBuilder.then(
                 ClientCommandManager.literal("open").executes(ctx -> {
                     Minecraft.getInstance().schedule(() -> {
-                        Minecraft.getInstance().setScreenAndShow(new TextEditorScreen(Component.literal("meow")));
+                        Minecraft.getInstance().setScreenAndShow(TextEditorScreen.getInstance());
                     });
                     return 0;
                 })
@@ -35,9 +36,14 @@ public class TextEditorCommandsFeature implements CommandFeature {
                     Minecraft.getInstance().schedule(() -> {
                         var is = Minecraft.getInstance().player.getMainHandItem();
                         var encoded = Template.fromItem(is);
-                        ctx.getSource().sendFeedback(Component.literal(
-                                String.valueOf(encoded)
-                        ));
+                        var decompiled = Decompiler.decompile(encoded);
+
+                        var sb = new StringBuilder();
+                        decompiled.lowerToParsable(sb, 0);
+
+                        ctx.getSource().sendFeedback(Component.literal(sb.toString()));
+                        Minecraft.getInstance().setScreenAndShow(TextEditorScreen.getInstance());
+                        TextEditorScreen.getInstance().setContents(sb.toString());
                     });
                     return 0;
                 })

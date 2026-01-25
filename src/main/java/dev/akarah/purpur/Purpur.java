@@ -10,7 +10,6 @@ public class Purpur implements ModInitializer, ClientModInitializer {
     @Override
     public void onInitialize() {
         System.out.println(MappingsRepository.get().getScriptNames());
-        System.exit(0);
     }
 
     @Override

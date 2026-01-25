@@ -11,10 +11,18 @@ import net.minecraft.network.chat.Component;
 import org.lwjgl.glfw.GLFW;
 
 public class TextEditorScreen extends Screen {
+    private static final TextEditorScreen INSTANCE = new TextEditorScreen(Component.literal("Text Editor"));
+
+    boolean initialized = false;
     MultiLineEditBox editBox;
 
-    public TextEditorScreen(Component component) {
+    private TextEditorScreen(Component component) {
         super(component);
+    }
+
+    public static TextEditorScreen getInstance() {
+        if(!INSTANCE.initialized) INSTANCE.init();
+        return INSTANCE;
     }
 
     @Override
@@ -73,5 +81,9 @@ public class TextEditorScreen extends Screen {
             }
         }
         return super.keyPressed(keyEvent);
+    }
+
+    public void setContents(String contents) {
+        this.editBox.setValue(contents);
     }
 }
