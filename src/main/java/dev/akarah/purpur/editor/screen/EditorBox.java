@@ -5,6 +5,8 @@ import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.network.chat.Component;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.components.MultiLineEditBox;
+import net.minecraft.network.chat.FontDescription;
+import net.minecraft.resources.Identifier;
 import net.minecraft.util.ARGB;
 import net.minecraft.util.Util;
 import org.jspecify.annotations.NonNull;
@@ -78,16 +80,21 @@ public class EditorBox extends MultiLineEditBox {
 
     record HighlightGroup(Pattern pattern, int color) {}
 
+    public static FontDescription OUR_FONT = new FontDescription.Resource(Identifier.fromNamespaceAndPath("purpur", "code"));
+
     protected void renderHighlightedLine(String currentLineText, int lineStartX, int currentLineY, @NonNull GuiGraphics guiGraphics) {
-        guiGraphics.drawString(this.font, currentLineText, lineStartX, currentLineY, this.textColor, this.textShadow);
+        var currentLineComp = Component.literal(currentLineText).withStyle(style -> style.withFont(OUR_FONT));
+        guiGraphics.drawString(this.font, currentLineComp, lineStartX, currentLineY, this.textColor, this.textShadow);
 
         for(var group : groups()) {
             var matcher = group.pattern.matcher(currentLineText);
             while(matcher.find()) {
                 var beforeHighlightedText = currentLineText.substring(0, matcher.start());
+                var beforeHighlightedComp = Component.literal(beforeHighlightedText).withStyle(style -> style.withFont(OUR_FONT));
                 var highlightedTextFound = currentLineText.substring(matcher.start(), matcher.end());
-                var lineOffset = lineStartX + this.font.width(beforeHighlightedText);
-                guiGraphics.drawString(this.font, highlightedTextFound, lineOffset, currentLineY, group.color, this.textShadow);
+                var highlightedCompFound = Component.literal(highlightedTextFound).withStyle(style -> style.withFont(OUR_FONT));
+                var lineOffset = lineStartX + this.font.width(beforeHighlightedComp);
+                guiGraphics.drawString(this.font, highlightedCompFound, lineOffset, currentLineY, group.color, this.textShadow);
             }
         }
     }
@@ -115,7 +122,7 @@ public class EditorBox extends MultiLineEditBox {
                 if (shouldRenderBlinkingCursor && cursorWithinText && cursorIndex >= currentLineView.beginIndex() && cursorIndex <= currentLineView.endIndex()) {
                     var textBeforeCursor = textBuffer.substring(currentLineView.beginIndex(), cursorIndex);
                     this.renderHighlightedLine(currentLineText, lineStartX, currentLineY, guiGraphics);
-                    cursorPixelX = lineStartX + this.font.width(textBeforeCursor);
+                    cursorPixelX = lineStartX + this.font.width(Component.literal(textBeforeCursor).withStyle(s -> s.withFont(OUR_FONT)));
                     if (!cursorRendered) {
                         int caretTopY = currentLineY - 1;
                         int caretRightX = cursorPixelX + 1;
@@ -126,7 +133,7 @@ public class EditorBox extends MultiLineEditBox {
                 } else {
                     var lineToRender = currentLineText;
                     this.renderHighlightedLine(lineToRender, lineStartX, currentLineY, guiGraphics);
-                    cursorPixelX = lineStartX + this.font.width(lineToRender) - 1;
+                    cursorPixelX = lineStartX + this.font.width(Component.literal(lineToRender).withStyle(s -> s.withFont(OUR_FONT))) - 1;
                 }
             }
             lastLineY = currentLineY;
@@ -159,12 +166,14 @@ public class EditorBox extends MultiLineEditBox {
                     }
 
                     if (this.withinContentAreaTopBottom(currentLineY, currentLineY + 9)) {
-                        int selectionStartOffsetPx = this.font.width(textBuffer.substring(textLine.beginIndex(), Math.max(selectedTextView.beginIndex(), textLine.beginIndex())));
+                        var substr = textBuffer.substring(textLine.beginIndex(), Math.max(selectedTextView.beginIndex(), textLine.beginIndex()));
+                        int selectionStartOffsetPx = this.font.width(Component.literal(substr).withStyle(s -> s.withFont(OUR_FONT)));
                         int selectionOffsetEndPx;
                         if (selectedTextView.endIndex() > textLine.endIndex()) {
                             selectionOffsetEndPx = this.width - this.innerPadding();
                         } else {
-                            selectionOffsetEndPx = this.font.width(textBuffer.substring(textLine.beginIndex(), selectedTextView.endIndex()));
+                            var substr2 = textBuffer.substring(textLine.beginIndex(), selectedTextView.endIndex());
+                            selectionOffsetEndPx = this.font.width(Component.literal(substr2).withStyle(s -> s.withFont(OUR_FONT)));
                         }
 
                         int selectionHighlightLeftX = selectionStartX + selectionStartOffsetPx;
