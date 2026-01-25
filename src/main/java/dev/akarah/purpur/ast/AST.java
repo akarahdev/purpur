@@ -14,8 +14,8 @@ public sealed interface AST {
             builder.append("{");
             for(var cb : this.statements) {
                 builder.append("\n");
-                builder.append(" ".repeat(depth + TAB_SPACES_LENGTH));
-                cb.lowerToParsable(builder, depth + 1);
+                builder.append(" ".repeat(depth + AST.TAB_SPACES_LENGTH));
+                cb.lowerToParsable(builder, depth + AST.TAB_SPACES_LENGTH);
             }
             builder.append("\n").append(" ".repeat(depth)).append("}");
         }
@@ -26,6 +26,10 @@ public sealed interface AST {
             List<Value> arguments,
             Optional<Block> childBlock
     ) implements AST {
+        public Invoke withChildBlock(Block block) {
+            return new Invoke(invoking, arguments, Optional.of(block));
+        }
+
         @Override
         public void lowerToParsable(StringBuilder builder, int depth) {
             invoking.lowerToParsable(builder, depth);

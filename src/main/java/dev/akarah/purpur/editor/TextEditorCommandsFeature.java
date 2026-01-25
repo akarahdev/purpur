@@ -36,7 +36,7 @@ public class TextEditorCommandsFeature implements CommandFeature {
                     Minecraft.getInstance().schedule(() -> {
                         var is = Minecraft.getInstance().player.getMainHandItem();
                         var encoded = Template.fromItem(is);
-                        var decompiled = Decompiler.decompile(encoded);
+                        var decompiled = Decompiler.decompile(Decompiler.makeDraft(encoded));
 
                         var sb = new StringBuilder();
                         decompiled.lowerToParsable(sb, 0);
