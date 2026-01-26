@@ -1,7 +1,7 @@
 package dev.akarah.purpur.decompiler;
 
 import com.google.common.collect.Lists;
-import dev.akarah.purpur.ast.AST;
+import dev.akarah.purpur.parser.AST;
 import dev.akarah.purpur.mappings.MappingsRepository;
 import dev.dfonline.flint.templates.CodeBlock;
 import dev.dfonline.flint.templates.codeblock.*;

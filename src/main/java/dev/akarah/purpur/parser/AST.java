@@ -1,4 +1,4 @@
-package dev.akarah.purpur.ast;
+package dev.akarah.purpur.parser;
 
 import com.google.common.collect.Lists;
 import dev.akarah.purpur.decompiler.CodeBlockDecompiler;
@@ -6,7 +6,6 @@ import dev.akarah.purpur.mappings.MappingsRepository;
 import dev.dfonline.flint.actiondump.codeblocks.ActionType;
 import dev.dfonline.flint.templates.Arguments;
 import dev.dfonline.flint.templates.CodeBlocks;
-import dev.dfonline.flint.templates.Template;
 import dev.dfonline.flint.templates.VariableScope;
 import dev.dfonline.flint.templates.argument.*;
 import dev.dfonline.flint.templates.argument.abstracts.Argument;
@@ -16,7 +15,6 @@ import dev.dfonline.flint.templates.codeblock.target.PlayerTarget;
 import net.minecraft.world.item.ItemStack;
 import org.jspecify.annotations.Nullable;
 
-import java.awt.*;
 import java.util.List;
 import java.util.Optional;
 

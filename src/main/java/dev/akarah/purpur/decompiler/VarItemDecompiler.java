@@ -1,6 +1,6 @@
 package dev.akarah.purpur.decompiler;
 
-import dev.akarah.purpur.ast.AST;
+import dev.akarah.purpur.parser.AST;
 import dev.akarah.purpur.mappings.MappingsRepository;
 import dev.dfonline.flint.templates.argument.*;
 import dev.dfonline.flint.templates.argument.abstracts.Argument;

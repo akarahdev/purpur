@@ -1,11 +1,8 @@
 package dev.akarah.purpur.parser;
 
 import com.google.common.collect.Lists;
-import dev.akarah.purpur.ast.AST;
 import dev.akarah.purpur.lexer.TokenTree;
-import dev.akarah.purpur.mappings.MappingsRepository;
 import dev.akarah.purpur.misc.SpannedException;
-import net.minecraft.world.level.block.state.BlockState;
 import org.jspecify.annotations.Nullable;
 
 import java.util.List;

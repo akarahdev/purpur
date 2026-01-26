@@ -3,7 +3,7 @@ package dev.akarah.purpur.lexer;
 import com.google.common.collect.Lists;
 import com.mojang.brigadier.StringReader;
 import com.mojang.brigadier.exceptions.CommandSyntaxException;
-import dev.akarah.purpur.ast.AST;
+import dev.akarah.purpur.parser.AST;
 import dev.akarah.purpur.misc.SpanData;
 import dev.akarah.purpur.misc.SpannedException;
 import org.jspecify.annotations.Nullable;
