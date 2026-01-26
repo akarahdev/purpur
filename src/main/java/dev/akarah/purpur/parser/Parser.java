@@ -8,6 +8,10 @@ import dev.akarah.purpur.parser.ast.Block;
 import dev.akarah.purpur.parser.ast.Invoke;
 import dev.akarah.purpur.parser.ast.Program;
 import dev.akarah.purpur.parser.ast.Value;
+import net.minecraft.core.registries.BuiltInRegistries;
+import net.minecraft.resources.Identifier;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.Items;
 import org.jspecify.annotations.Nullable;
 
 import java.util.List;
@@ -80,28 +84,12 @@ public class Parser {
     public @Nullable Invoke parseInvoke() {
         try {
             var ident = expect(TokenTree.Identifier.class);
-            var paren = expect(TokenTree.Parenthesis.class);
 
-            var argParser = new Parser(paren.children(), this.errors);
-            var args = Lists.<Value>newArrayList();
-            while(argParser.canRead()) {
-                var arg = argParser.parseValue();
-                args.add(arg);
-                if(argParser.canRead()) {
-                    argParser.expect(TokenTree.Comma.class);
-                }
-            }
+            var args = parseValues();
 
             var block = Optional.<Block>empty();
-            if(peek() instanceof TokenTree.Braces braces) {
-                this.index += 1;
-                var blockParser = new Parser(braces.children(), this.errors);
-                var invokes = Lists.<Invoke>newArrayList();
-                while(blockParser.canRead()) {
-                    var invoke = blockParser.parseInvoke();
-                    if(invoke != null) invokes.add(invoke);
-                }
-                block = Optional.of(new Block(invokes));
+            if(peek() instanceof TokenTree.Braces) {
+                block = Optional.of(parseBlock());
             }
 
             return new Invoke(
@@ -115,6 +103,33 @@ public class Parser {
         } catch (Exception e) {
             return null;
         }
+    }
+
+    public List<Value> parseValues() {
+        var paren = expect(TokenTree.Parenthesis.class);
+
+        var argParser = new Parser(paren.children(), this.errors);
+        var args = Lists.<Value>newArrayList();
+        while(argParser.canRead()) {
+            var arg = argParser.parseValue();
+            args.add(arg);
+            if(argParser.canRead()) {
+                argParser.expect(TokenTree.Comma.class);
+            }
+        }
+
+        return args;
+    }
+
+    public Block parseBlock() {
+        var braces = expect(TokenTree.Braces.class);
+        var blockParser = new Parser(braces.children(), this.errors);
+        var invokes = Lists.<Invoke>newArrayList();
+        while(blockParser.canRead()) {
+            var invoke = blockParser.parseInvoke();
+            if(invoke != null) invokes.add(invoke);
+        }
+        return new Block(invokes);
     }
 
     public Value parseValue() {
@@ -146,6 +161,134 @@ public class Parser {
                     yield null;
                 }
                 yield new Value.TagLiteral(split[0], split[1], ident.spanData());
+            }
+            case TokenTree.GameValueKeyword gameValueKeyword -> {
+                var ident = expect(TokenTree.Identifier.class);
+                var split = ident.name().split("\\.");
+                if(split.length != 2) {
+                    this.errors.add(new SpannedException(
+                            "A game value's ID must have two parts, formatted like `target.value`",
+                            ident.spanData()
+                    ));
+                    yield null;
+                }
+                yield new Value.GameValue(split[0], split[1], ident.spanData());
+            }
+            case TokenTree.LocKeyword locKeyword -> {
+                var args = parseValues();
+                if(args.size() != 3 && args.size() != 5) {
+                    this.errors.add(new SpannedException(
+                            "A location constructor must have either 3 or 5 arguments",
+                            locKeyword.spanData()
+                    ));
+                    yield null;
+                }
+                for(var arg : args) {
+                    if(!(arg instanceof Value.Number)) {
+                        this.errors.add(new SpannedException(
+                                "Location constructor arguments must be numbers",
+                                arg.spanData()
+                        ));
+                    }
+                }
+                yield new Value.LocationLiteral(
+                        Double.parseDouble(((Value.Number) args.get(0)).literal()),
+                        Double.parseDouble(((Value.Number) args.get(1)).literal()),
+                        Double.parseDouble(((Value.Number) args.get(2)).literal()),
+                        Double.parseDouble(((Value.Number) args.get(3)).literal()),
+                        Double.parseDouble(((Value.Number) args.get(4)).literal()),
+                        locKeyword.spanData()
+                );
+            }
+            case TokenTree.VecKeyword vecKeyword -> {
+                var args = parseValues();
+                if(args.size() != 3) {
+                    this.errors.add(new SpannedException(
+                            "A vector constructor must have either 3 or 5 arguments",
+                            vecKeyword.spanData()
+                    ));
+                    yield null;
+                }
+                for(var arg : args) {
+                    if(!(arg instanceof Value.Number)) {
+                        this.errors.add(new SpannedException(
+                                "Location constructor arguments must be numbers",
+                                arg.spanData()
+                        ));
+                    }
+                }
+                yield new Value.VecLiteral(
+                        Double.parseDouble(((Value.Number) args.get(0)).literal()),
+                        Double.parseDouble(((Value.Number) args.get(1)).literal()),
+                        Double.parseDouble(((Value.Number) args.get(2)).literal()),
+                        vecKeyword.spanData()
+                );
+            }
+            case TokenTree.ItemKeyword itemKeyword -> {
+                var args = parseValues();
+                if(args.isEmpty()) {
+                    this.errors.add(new SpannedException(
+                            "An item constructor must have an ID",
+                            itemKeyword.spanData()
+                    ));
+                    yield null;
+                }
+                if(args.size() > 3) {
+                    this.errors.add(new SpannedException(
+                            "An item constructor only needs an ID, count, and components",
+                            itemKeyword.spanData()
+                    ));
+                }
+
+                var id = Identifier.fromNamespaceAndPath("minecraft", "air");
+                if(!args.isEmpty()) {
+                    var val = args.getFirst();
+                    if(val instanceof Value.Variable variable) {
+                        id = Identifier.parse(variable.name());
+                        if(BuiltInRegistries.ITEM.getOptional(id).isEmpty()) {
+                            this.errors.add(new SpannedException(
+                                    "Invalid item ID",
+                                    val.spanData()
+                            ));
+                        }
+                    } else {
+                        this.errors.add(new SpannedException(
+                                "An item constructor's first argument must be an item ID",
+                                val.spanData()
+                        ));
+                    }
+                }
+
+                var count = 1;
+                if(args.size() >= 2) {
+                    var val = args.get(1);
+                    if(val instanceof Value.Number number) {
+                        count = (int) Double.parseDouble(number.literal());
+                        if(count > 99) {
+                            this.errors.add(new SpannedException(
+                                    "Item stacks can't have more than 99",
+                                    val.spanData()
+                            ));
+                        }
+                        if(count <= 0) {
+                            this.errors.add(new SpannedException(
+                                    "Item stacks can't have less than 1",
+                                    val.spanData()
+                            ));
+                        }
+                    } else {
+                        this.errors.add(new SpannedException(
+                                "An item constructor's second argument must be a count",
+                                val.spanData()
+                        ));
+                    }
+                }
+                var is = new ItemStack(BuiltInRegistries.ITEM.getValue(id));
+                is.setCount(count);
+                yield new Value.ItemStackVarItem(
+                        is,
+                        itemKeyword.spanData()
+                );
             }
             default -> {
                 this.index -= 1;

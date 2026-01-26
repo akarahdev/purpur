@@ -53,6 +53,22 @@ public class Lexer {
             }
             return new TokenTree.Number(sb.toString(), this.endSpan(start));
         }
+
+        if(stringReader.peek() == 'n' && stringReader.peek(1) == '\"') {
+            var start = this.stringReader.getCursor();
+            expect('n');
+            return new TokenTree.Number(parseStringLiteral(), this.endSpan(start));
+        }
+        if(stringReader.peek() == '`') {
+            var start = this.stringReader.getCursor();
+            var sb = new StringBuilder();
+            stringReader.skip();
+            while(stringReader.canRead() && stringReader.peek() != '`') {
+                sb.append(stringReader.read());
+            }
+            stringReader.skip();
+            return new TokenTree.Identifier(sb.toString(), this.endSpan(start));
+        }
         if(Value.Variable.charIsAllowedInIdentifier(stringReader.peek())) {
             var start = this.stringReader.getCursor();
             var sb = new StringBuilder();
@@ -82,11 +98,6 @@ public class Lexer {
             var start = this.stringReader.getCursor();
             expect('$');
             return new TokenTree.ComponentLiteral(parseStringLiteral(), this.endSpan(start));
-        }
-        if(stringReader.peek() == 'n') {
-            var start = this.stringReader.getCursor();
-            expect('n');
-            return new TokenTree.Number(parseStringLiteral(), this.endSpan(start));
         }
         if(stringReader.peek() == '=') {
             var start = this.stringReader.getCursor();

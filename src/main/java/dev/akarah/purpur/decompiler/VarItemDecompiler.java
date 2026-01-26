@@ -13,9 +13,9 @@ public class VarItemDecompiler {
             case VariableArgument variableArgument ->
                     new Value.Variable(variableArgument.getName(), variableArgument.getScope().internalName, null);
             case StringArgument stringArgument ->
-                    new Value.StringLiteral(stringArgument.getValue(), null);
+                    new Value.StringLiteral(stringArgument.getValue().replace("\\", "\\\\"), null);
             case TextArgument textArgument ->
-                    new Value.ComponentLiteral(textArgument.getValue(), null);
+                    new Value.ComponentLiteral(textArgument.getValue().replace("\\", "\\\\"), null);
             case VectorArgument vectorArgument ->
                     new Value.VecLiteral(
                             vectorArgument.getX(),

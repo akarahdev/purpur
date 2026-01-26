@@ -4,26 +4,16 @@ import com.google.common.collect.Lists;
 import com.mojang.blaze3d.platform.cursor.CursorTypes;
 import dev.akarah.purpur.lexer.Lexer;
 import dev.akarah.purpur.misc.SpannedException;
-import dev.akarah.purpur.parser.CodegenContext;
 import dev.akarah.purpur.parser.Parser;
 import dev.akarah.purpur.parser.ast.AST;
-import dev.dfonline.flint.data.DFItem;
-import dev.dfonline.flint.templates.CodeBlocks;
-import dev.dfonline.flint.templates.Template;
 import net.minecraft.client.gui.GuiGraphics;
-import net.minecraft.core.component.DataComponents;
-import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.chat.Component;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.components.MultiLineEditBox;
 import net.minecraft.network.chat.FontDescription;
-import net.minecraft.network.protocol.game.ClientboundSetPlayerInventoryPacket;
 import net.minecraft.network.protocol.game.ServerboundSetCreativeModeSlotPacket;
 import net.minecraft.resources.Identifier;
 import net.minecraft.util.ARGB;
-import net.minecraft.world.item.ItemStack;
-import net.minecraft.world.item.Items;
-import net.minecraft.world.item.component.CustomData;
 import org.jspecify.annotations.NonNull;
 
 import java.util.List;
@@ -34,6 +24,14 @@ public class EditorBox extends MultiLineEditBox {
     List<SpannedException> spannedExceptions = Lists.newArrayList();
     boolean dirty;
 
+    private static String generateRecursiveRegex(String s) {
+        for(int i = 0; i < 7; i++) {
+            s = s.replace("?R", s);
+        }
+        s = s.replace("?R", "");
+        return s;
+    }
+
     public static List<HighlightGroup> groups() {
         return List.of(
                 // numbers
@@ -43,7 +41,7 @@ public class EditorBox extends MultiLineEditBox {
                 ),
                 // identifiers
                 new HighlightGroup(
-                        Pattern.compile("([a-zA-Z_0-9?./:]+)"),
+                        Pattern.compile("(([a-zA-Z_0-9?./:]+)|(`(.*?)`))"),
                         ARGB.color(255, 255, 200, 255)
                 ),
                 // namespaces
@@ -74,7 +72,12 @@ public class EditorBox extends MultiLineEditBox {
                 // strings
                 new HighlightGroup(
                         Pattern.compile("\"(.*?)\""),
-                        ARGB.color(255, 170, 255, 170)
+                        ARGB.color(255, 140, 255, 140)
+                ),
+                // % codes
+                new HighlightGroup(
+                        Pattern.compile(generateRecursiveRegex("%([a-zA-Z]+)\\((?:[^()]+|(?R))*\\)")),
+                        ARGB.color(255, 190, 255, 190)
                 ),
                 // comments
                 new HighlightGroup(

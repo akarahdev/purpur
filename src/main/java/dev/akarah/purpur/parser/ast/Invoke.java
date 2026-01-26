@@ -99,6 +99,9 @@ public record Invoke(
         int idx = 0;
         var tagsWritten = Lists.newArrayList();
         for (var arg : this.arguments) {
+            if(arg == null) {
+                continue;
+            }
             if (arg instanceof Value.TagLiteral(String tag, String option, SpanData spanData)) {
                 var dfTag = MappingsRepository.get().getDfTag(new MappingsRepository.ScriptBlockTag(tag, option));
                 if (dfTag == null) {
@@ -110,7 +113,8 @@ public record Invoke(
                 }
                 tagsWritten.add(dfTag.tag());
             }
-            arguments.add(arg.createArgument(ctx, actionType, idx));
+            var createdArg = arg.createArgument(ctx, actionType, idx);
+            if(createdArg != null) arguments.add(createdArg);
             idx += 1;
         }
         for (var tag : actionType.tags()) {
@@ -221,7 +225,7 @@ public record Invoke(
                 childBlock.statements().forEach(childStatement -> childStatement.buildTemplate(ctx));
                 ctx.codeBlocks().add(new Bracket(Bracket.Type.NORMAL, Bracket.Direction.CLOSE));
             }
-            if (this.invoking.name().contains("func.") || this.invoking.name().contains("func.")) {
+            if (this.invoking.name().startsWith("func.") || this.invoking.name().startsWith("proc.")) {
                 childBlock.statements().forEach(childStatement -> childStatement.buildTemplate(ctx));
             }
             if (this.invoking.name().contains("repeat")) {

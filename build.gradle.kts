@@ -46,6 +46,7 @@ dependencies {
     modImplementation("net.kyori:adventure-platform-fabric:${project.property("adventure_fabric_version")}")
 
     implementation("org.apache.commons:commons-text:1.15.0")
+    implementation("com.github.florianingerl.util:regex:1.1.11")
 }
 
 tasks.processResources {

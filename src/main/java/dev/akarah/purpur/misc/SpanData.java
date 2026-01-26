@@ -5,4 +5,7 @@ public record SpanData(
         int start,
         int end
 ) {
+    public String toString() {
+        return "@" + start + ".." + end;
+    }
 }
