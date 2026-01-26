@@ -37,7 +37,14 @@ sealed public interface Value extends AST {
         }
 
         public Argument createArgument(CodegenContext ctx, ActionType actionType, int argIndex) {
-            return new VariableArgument(argIndex, this.name, VariableScope.valueOf(this.scope.toUpperCase()));
+            return new VariableArgument(argIndex, this.name, VariableScope.fromInternalName(
+                    switch (this.scope) {
+                        case "local" -> "local";
+                        case "game" -> "unsaved";
+                        case "saved" -> "saved";
+                        default -> "line";
+                    }
+            ));
         }
     }
 
