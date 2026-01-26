@@ -1,6 +1,8 @@
 package dev.akarah.purpur.parser;
 
 import com.google.common.collect.Lists;
+import com.mojang.brigadier.StringReader;
+import com.mojang.brigadier.exceptions.CommandSyntaxException;
 import dev.akarah.purpur.lexer.TokenTree;
 import dev.akarah.purpur.mappings.MappingsRepository;
 import dev.akarah.purpur.misc.ParseResult;
@@ -11,11 +13,20 @@ import dev.akarah.purpur.parser.ast.stmt.Invoke;
 import dev.akarah.purpur.parser.ast.Program;
 import dev.akarah.purpur.parser.ast.value.*;
 import dev.akarah.purpur.parser.ast.value.Number;
+import net.minecraft.client.Minecraft;
+import net.minecraft.commands.arguments.NbtTagArgument;
+import net.minecraft.core.component.DataComponentPatch;
 import net.minecraft.core.registries.BuiltInRegistries;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.nbt.NbtIo;
+import net.minecraft.nbt.NbtOps;
+import net.minecraft.nbt.Tag;
 import net.minecraft.resources.Identifier;
+import net.minecraft.resources.RegistryOps;
 import net.minecraft.world.item.ItemStack;
 import org.jspecify.annotations.Nullable;
 
+import java.io.DataInputStream;
 import java.util.List;
 import java.util.Optional;
 
@@ -349,8 +360,33 @@ public class Parser {
                         ));
                     }
                 }
+
+                var patch = DataComponentPatch.builder().build();
+                if(args.size() >= 3) {
+                    var val = args.get(2);
+                    if(val instanceof NbtLiteral(Tag tag, SpanData spanData)) {
+                        try {
+                            patch = DataComponentPatch.CODEC.parse(
+                                    RegistryOps.create(NbtOps.INSTANCE, Minecraft.getInstance().player.registryAccess()),
+                                    tag
+                            ).getOrThrow();
+                        } catch (Exception e) {
+                            this.errors.add(new SpannedException(
+                                    "Failed to parse component: " + e.getMessage(),
+                                    spanData
+                            ));
+                        }
+                    } else {
+                        this.errors.add(new SpannedException(
+                                "An item constructor's third argument must be a NBT component map",
+                                val.spanData()
+                        ));
+                    }
+                }
+
                 var is = new ItemStack(BuiltInRegistries.ITEM.getValue(id));
                 is.setCount(count);
+                is.applyComponents(patch);
                 yield new ItemStackVarItem(
                         is,
                         itemKeyword.spanData()
@@ -399,6 +435,33 @@ public class Parser {
                         optional,
                         defaultValue,
                         paramTypeTokens.spanData()
+                );
+            }
+            case TokenTree.NbtKeyword nbtKeyword -> {
+                var parens = expect(TokenTree.Parenthesis.class);
+                if(parens.children().isEmpty()) {
+                    this.errors.add(new SpannedException(
+                            "An NBT constructor must have a compound as the argument.",
+                            nbtKeyword.spanData()
+                    ));
+                    yield null;
+                }
+
+                var nbtString = parens.children().getFirst().toString();
+                Tag nbtData;
+                try {
+                    nbtData = NbtTagArgument.nbtTag().parse(new StringReader(nbtString));
+                } catch (CommandSyntaxException e) {
+                    this.errors.add(new SpannedException(
+                            "NBT is not parsable: " + e.getMessage(),
+                            parens.children().getFirst().spanData()
+                    ));
+                    yield null;
+                }
+
+                yield new NbtLiteral(
+                        nbtData,
+                        parens.children().getFirst().spanData()
                 );
             }
             default -> {

@@ -277,7 +277,7 @@ public record Invoke(
             ctx.codeBlocks().add(new Control(actionType.name()).setArguments(arguments));
         }
         this.childBlock.ifPresent(childBlock -> {
-            if (this.invoking.name().contains("if")) {
+            if (this.invoking.name().startsWith("if")) {
                 ctx.codeBlocks().add(new Bracket(Bracket.Type.NORMAL, Bracket.Direction.OPEN));
                 childBlock.statements().forEach(childStatement -> childStatement.buildTemplate(ctx));
                 ctx.codeBlocks().add(new Bracket(Bracket.Type.NORMAL, Bracket.Direction.CLOSE));
@@ -285,16 +285,16 @@ public record Invoke(
             if (this.invoking.name().startsWith("func.") || this.invoking.name().startsWith("proc.")) {
                 childBlock.statements().forEach(childStatement -> childStatement.buildTemplate(ctx));
             }
-            if (this.invoking.name().contains("repeat")) {
+            if (this.invoking.name().startsWith("repeat")) {
                 ctx.codeBlocks().add(new Bracket(Bracket.Type.REPEAT, Bracket.Direction.OPEN));
                 childBlock.statements().forEach(childStatement -> childStatement.buildTemplate(ctx));
                 ctx.codeBlocks().add(new Bracket(Bracket.Type.REPEAT, Bracket.Direction.CLOSE));
             }
-            if (this.invoking.name().contains("select")) {
+            if (this.invoking.name().startsWith("select")) {
                 childBlock.statements().forEach(childStatement -> childStatement.buildTemplate(ctx));
                 ctx.codeBlocks().add(new SelectObject("Reset", "", false));
             }
-            if (this.invoking.name().contains("Event")) {
+            if (this.invoking.name().startsWith("Event")) {
                 childBlock.statements().forEach(childStatement -> childStatement.buildTemplate(ctx));
             }
         });
