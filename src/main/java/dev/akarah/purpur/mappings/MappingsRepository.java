@@ -111,9 +111,16 @@ public class MappingsRepository {
 
             var scriptActionName = Character.toLowerCase(action.name().trim().charAt(0)) + action.name().trim().substring(1);
 
+            var a = scriptActionName;
             for(var entry : SCRIPT_NAME_HELPER.entrySet()) {
-                scriptActionName = scriptActionName.replace(entry.getKey(), entry.getValue());
+                if((scriptCodeblockName + "." + scriptActionName).equals(entry.getKey())) {
+                    var splits = entry.getValue().split("\\.");
+                    scriptCodeblockName = splits[0];
+                    scriptActionName = splits[1];
+                }
             }
+            var b = scriptActionName;
+            System.out.println(a + " -> " + b);
             var scriptName = scriptCodeblockName + "." + scriptActionName;
             var dfName = action.codeblockName() + "." + action.name();
 

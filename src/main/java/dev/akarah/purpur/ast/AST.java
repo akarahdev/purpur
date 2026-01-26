@@ -59,11 +59,13 @@ public sealed interface AST {
                 var nsb = new StringBuilder();
                 int idx2 = 0;
                 for(var arg : arguments) {
-                    if(idx2 != arguments.size() - 1) {
-                        nsb.append(", ").append("\n").append(" ".repeat(depth + TAB_SPACES_LENGTH));
-                    }
+                    nsb.append("\n").append(" ".repeat(depth + TAB_SPACES_LENGTH));
 
                     arg.lowerToParsable(nsb, depth);
+
+                    if(idx2 != arguments.size() - 1) {
+                        nsb.append(",");
+                    }
 
                     idx2 += 1;
                 }
