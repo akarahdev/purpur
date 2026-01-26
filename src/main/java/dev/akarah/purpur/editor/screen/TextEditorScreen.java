@@ -3,7 +3,6 @@ package dev.akarah.purpur.editor.screen;
 import dev.akarah.purpur.lexer.Lexer;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.components.Button;
-import net.minecraft.client.gui.components.MultiLineEditBox;
 import net.minecraft.client.gui.components.MultiLineTextWidget;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.input.CharacterEvent;
@@ -36,7 +35,7 @@ public class TextEditorScreen extends Screen {
         this.editBox = new EditorBox(offX, offY, this.width - (offX * 2), this.height - (offY * 2));
 
         this.editBox.textField.setValueListener(value -> {
-            this.editBox.pushErrors();
+            this.editBox.tryCompile();
         });
 
         int buttonY = offY;

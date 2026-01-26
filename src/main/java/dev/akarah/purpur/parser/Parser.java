@@ -1,0 +1,130 @@
+package dev.akarah.purpur.parser;
+
+import com.google.common.collect.Lists;
+import dev.akarah.purpur.ast.AST;
+import dev.akarah.purpur.lexer.TokenTree;
+import dev.akarah.purpur.misc.SpannedException;
+import net.minecraft.world.level.block.state.BlockState;
+import org.jspecify.annotations.Nullable;
+
+import java.util.List;
+import java.util.Optional;
+
+public class Parser {
+    List<TokenTree> tokens;
+    List<SpannedException> errors = Lists.newArrayList();
+    int index = 0;
+
+    public Parser(List<TokenTree> tokens) {
+        this.tokens = tokens;
+    }
+
+    public Parser(List<TokenTree> tokens, List<SpannedException> errors) {
+        this.tokens = tokens;
+        this.errors = errors;
+    }
+
+    public void skipStartStreams() {
+        while(this.index < this.tokens.size() && this.tokens.get(this.index) instanceof TokenTree.StartOfStream) {
+            this.index++;
+        }
+    }
+
+    public boolean canRead() {
+        return this.index < this.tokens.size() && !(this.tokens.get(this.index) instanceof TokenTree.EndOfStream);
+    }
+
+    public TokenTree peek() {
+        skipStartStreams();
+        return this.tokens.get(this.index);
+    }
+
+    public TokenTree read() {
+        var t = this.tokens.get(this.index);
+        index += 1;
+        return t;
+    }
+
+    public <T extends TokenTree> T expect(Class<T> clazz) {
+        skipStartStreams();
+        var tok = this.tokens.get(this.index);
+        this.index += 1;
+        if(!clazz.isInstance(tok)) {
+            this.errors.add(new SpannedException(
+                    "Expected " + clazz.getName() + ", found " + tok.getClass().getName(),
+                    tok.spanData()
+            ));
+            throw new SpannedException("Expected " + clazz.getName() + ", found " + tok.getClass().getName(),
+                    tok.spanData());
+        }
+        return clazz.cast(tok);
+    }
+
+    public List<SpannedException> errors() {
+        return this.errors;
+    }
+
+    public AST.Statement.@Nullable Invoke parseInvoke() {
+        try {
+            var ident = expect(TokenTree.Identifier.class);
+            var paren = expect(TokenTree.Parenthesis.class);
+
+            var argParser = new Parser(paren.children(), this.errors);
+            var args = Lists.<AST.Value>newArrayList();
+            while(argParser.canRead()) {
+                var arg = argParser.parseValue();
+                args.add(arg);
+                if(argParser.canRead()) {
+                    argParser.expect(TokenTree.Comma.class);
+                }
+            }
+
+            var block = Optional.<AST.Block>empty();
+            if(peek() instanceof TokenTree.Braces braces) {
+                var blockParser = new Parser(braces.children(), this.errors);
+                var invokes = Lists.<AST.Statement.Invoke>newArrayList();
+                while(blockParser.canRead()) {
+                    var invoke = blockParser.parseInvoke();
+                    if(invoke != null) invokes.add(invoke);
+//                    if(blockParser.canRead()) {
+//                        blockParser.expect(TokenTree.Semicolon.class);
+//                    }
+                }
+                block = Optional.of(new AST.Block(invokes));
+            }
+
+            return new AST.Statement.Invoke(
+                    new AST.Value.Variable(ident.name(), "line"),
+                    args,
+                    block
+            );
+        } catch (Exception e) {
+            return null;
+        }
+    }
+
+    public AST.Value parseValue() {
+        return switch (read()) {
+            case TokenTree.Identifier identifier -> new AST.Value.Variable(identifier.name(), "line");
+            case TokenTree.Number number -> new AST.Value.Number(number.value());
+            case TokenTree.StringLiteral stringLiteral -> new AST.Value.StringLiteral(stringLiteral.value());
+            case TokenTree.ComponentLiteral componentLiteral -> new AST.Value.ComponentLiteral(componentLiteral.value());
+            case TokenTree.LocalKeyword localKeyword -> {
+                var name = expect(TokenTree.Identifier.class);
+                yield new AST.Value.Variable(name.name(), "local");
+            }
+            case TokenTree.GameKeyword gameKeyword -> {
+                var name = expect(TokenTree.Identifier.class);
+                yield new AST.Value.Variable(name.name(), "game");
+            }
+            case TokenTree.SavedKeyword savedKeyword -> {
+                var name = expect(TokenTree.Identifier.class);
+                yield new AST.Value.Variable(name.name(), "saved");
+            }
+            default -> {
+                this.index -= 1;
+                yield null;
+            }
+        };
+    }
+}

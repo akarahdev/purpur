@@ -25,9 +25,13 @@ public class Lexer {
 
     public List<TokenTree> parse() {
         List<TokenTree> trees = Lists.newArrayList();
+        trees.add(new TokenTree.StartOfStream(new SpanData(this.stringReader.getString(), 0, 0)));
         while(stringReader.canRead()) {
             var tree = parseSingleToken();
             if(tree != null) trees.add(tree);
+        }
+        for(int i = 0; i < 100; i++) {
+            trees.add(new TokenTree.EndOfStream(new SpanData(this.stringReader.getString(), this.stringReader.getString().length(), this.stringReader.getString().length())));
         }
         return trees;
     }
@@ -35,6 +39,15 @@ public class Lexer {
     public @Nullable TokenTree parseSingleToken() {
         this.stringReader.skipWhitespace();
         if(!this.stringReader.canRead()) return null;
+        Predicate<Character> numPredicate = ch -> Character.isDigit(ch) || ch == '-' || ch == '.';
+        if(numPredicate.test(stringReader.peek())) {
+            var sb = new StringBuilder();
+            var start = this.stringReader.getCursor();
+            while(numPredicate.test(stringReader.peek())) {
+                sb.append(stringReader.read());
+            }
+            return new TokenTree.Number(sb.toString(), this.endSpan(start));
+        }
         if(AST.Value.Variable.charIsAllowedInIdentifier(stringReader.peek())) {
             var start = this.stringReader.getCursor();
             var sb = new StringBuilder();
@@ -55,15 +68,6 @@ public class Lexer {
                 case "optional" -> new TokenTree.OptionalKeyword(this.endSpan(start));
                 default -> new TokenTree.Identifier(sb.toString(), this.endSpan(start));
             };
-        }
-        Predicate<Character> numPredicate = ch -> Character.isDigit(ch) || ch == '-' || ch == '.';
-        if(numPredicate.test(stringReader.peek())) {
-            var sb = new StringBuilder();
-            var start = this.stringReader.getCursor();
-            while(numPredicate.test(stringReader.peek())) {
-                sb.append(stringReader.read());
-            }
-            return new TokenTree.Number(sb.toString(), this.endSpan(start));
         }
         if(stringReader.peek() == '"') {
             var start = this.stringReader.getCursor();
@@ -94,6 +98,9 @@ public class Lexer {
                 var token = parseSingleToken();
                 if(token != null) trees.add(token);
             }
+            for(int i = 0; i < 10; i++) {
+                trees.add(new TokenTree.EndOfStream(new SpanData(this.stringReader.getString(), this.stringReader.getString().length(), this.stringReader.getString().length())));
+            }
             if(stringReader.canRead() && stringReader.peek() == '}') {
                 expect('}');
             }
@@ -108,6 +115,9 @@ public class Lexer {
                 if(!stringReader.canRead() || stringReader.peek() == ')') break;
                 var token = parseSingleToken();
                 if(token != null) trees.add(token);
+            }
+            for(int i = 0; i < 10; i++) {
+                trees.add(new TokenTree.EndOfStream(new SpanData(this.stringReader.getString(), this.stringReader.getString().length(), this.stringReader.getString().length())));
             }
             if(stringReader.canRead() && stringReader.peek() == ')') {
                 expect(')');

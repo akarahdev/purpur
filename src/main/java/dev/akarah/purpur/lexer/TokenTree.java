@@ -5,6 +5,8 @@ import dev.akarah.purpur.misc.SpanData;
 import java.util.List;
 
 public interface TokenTree {
+    record StartOfStream(SpanData spanData) implements TokenTree { }
+    record EndOfStream(SpanData spanData) implements TokenTree { }
     record Identifier(String name, SpanData spanData) implements TokenTree { }
     record Number(String value, SpanData spanData) implements TokenTree {}
     record StringLiteral(String value, SpanData spanData) implements TokenTree {}
@@ -26,4 +28,6 @@ public interface TokenTree {
     record Comma(SpanData spanData) implements TokenTree {}
     record Semicolon(SpanData spanData) implements TokenTree {}
     record Question(SpanData spanData) implements TokenTree {}
+
+    SpanData spanData();
 }

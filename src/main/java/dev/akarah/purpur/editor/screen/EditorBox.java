@@ -4,16 +4,24 @@ import com.google.common.collect.Lists;
 import com.mojang.blaze3d.platform.cursor.CursorTypes;
 import dev.akarah.purpur.lexer.Lexer;
 import dev.akarah.purpur.misc.SpannedException;
+import dev.akarah.purpur.parser.Parser;
+import dev.dfonline.flint.data.DFItem;
+import dev.dfonline.flint.templates.CodeBlocks;
+import dev.dfonline.flint.templates.Template;
 import net.minecraft.client.gui.GuiGraphics;
-import net.minecraft.client.input.CharacterEvent;
-import net.minecraft.client.input.KeyEvent;
+import net.minecraft.core.component.DataComponents;
+import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.chat.Component;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.components.MultiLineEditBox;
 import net.minecraft.network.chat.FontDescription;
+import net.minecraft.network.protocol.game.ClientboundSetPlayerInventoryPacket;
+import net.minecraft.network.protocol.game.ServerboundSetCreativeModeSlotPacket;
 import net.minecraft.resources.Identifier;
 import net.minecraft.util.ARGB;
-import net.minecraft.util.Util;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.Items;
+import net.minecraft.world.item.component.CustomData;
 import org.jspecify.annotations.NonNull;
 
 import java.util.List;
@@ -226,7 +234,7 @@ public class EditorBox extends MultiLineEditBox {
         }
     }
 
-    public void pushErrors() {
+    public void tryCompile() {
         try {
             this.spannedExceptions.clear();
             var lex = new Lexer(this.textField.value());
@@ -235,6 +243,39 @@ public class EditorBox extends MultiLineEditBox {
                 this.spannedExceptions.addAll(lex.errors());
                 System.out.println(lex.errors());
             }
+
+            var parser = new Parser(toks);
+            var i = parser.parseInvoke();
+            if(!parser.errors().isEmpty()) {
+                this.spannedExceptions.addAll(parser.errors());
+                System.out.println(parser.errors());
+            }
+
+            var blocks = new CodeBlocks();
+            if(i == null) {
+                return;
+            }
+            i.buildTemplate(blocks);
+            var template = new Template();
+            template.setBlocks(blocks);
+            System.out.println(blocks);
+
+            var item = new ItemStack(Items.CHEST);
+
+            var tag = new CompoundTag();
+            var publicValues = new CompoundTag();
+            publicValues.putString("hypercube:codetemplatedata", template.toJson().toString());
+            tag.put("PublicBukkitValues", publicValues);
+            item.set(
+                    DataComponents.CUSTOM_DATA,
+                    CustomData.of(tag)
+            );
+            var packet = new ServerboundSetCreativeModeSlotPacket(
+                    Minecraft.getInstance().player.getInventory().getSelectedSlot(),
+                    item
+            );
+            Minecraft.getInstance().getConnection().send(packet);
+            Minecraft.getInstance().player.getInventory().setSelectedItem(item);
         } catch (Exception e) {
             e.printStackTrace();
         }
