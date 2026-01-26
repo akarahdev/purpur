@@ -51,7 +51,7 @@ public class EditorBox extends MultiLineEditBox {
                 ),
                 // pseudo functions
                 new HighlightGroup(
-                        Pattern.compile("(?<=[ (,])(item|loc|vec|sound|particle)(?=\\()"),
+                        Pattern.compile("(?<=[ (,])(item|loc|vec|sound|particle|nbt)(?=\\()"),
                         ARGB.color(255, 170, 170, 255)
                 ),
                 // special syntaxes
