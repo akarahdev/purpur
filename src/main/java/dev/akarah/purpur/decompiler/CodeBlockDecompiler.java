@@ -96,6 +96,16 @@ public class CodeBlockDecompiler {
                         Optional.empty()
                 );
             }
+            case GameEvent entityEvent -> {
+                var dfName = new MappingsRepository.DfFunction("GAME EVENT", entityEvent.getAction());
+                var scriptName = MappingsRepository.get().getScriptFunction(dfName);
+                return new Invoke(
+                        new Variable(scriptName.name(), "line", null),
+                        Optional.empty(),
+                        List.of(),
+                        Optional.empty()
+                );
+            }
             case CodeBlockSubAction action -> {
                 var dfName = new MappingsRepository.DfFunction(MappingsRepository.idToFancyName(action.getBlock()), action.getAction());
                 ActionType dfSubAction = null;

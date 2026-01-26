@@ -210,6 +210,12 @@ public record Invoke(
         if (this.invoking.name().contains("game.")) {
             ctx.codeBlocks().add(new GameAction(actionType.name()).setArguments(arguments));
         }
+        if (this.invoking.name().contains("gameEvent.")) {
+            ctx.codeBlocks().add(new GameEvent(
+                    actionType.name(),
+                    false
+            ));
+        }
 
         // vars blocks
         if(this.invoking.name().contains("vars.")) {
