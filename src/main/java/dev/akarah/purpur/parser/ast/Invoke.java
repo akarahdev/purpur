@@ -5,10 +5,12 @@ import dev.akarah.purpur.mappings.MappingsRepository;
 import dev.akarah.purpur.misc.SpanData;
 import dev.akarah.purpur.misc.SpannedException;
 import dev.akarah.purpur.parser.CodegenContext;
+import dev.dfonline.flint.actiondump.codeblocks.ActionType;
 import dev.dfonline.flint.templates.Arguments;
 import dev.dfonline.flint.templates.argument.TagArgument;
 import dev.dfonline.flint.templates.codeblock.*;
 import dev.dfonline.flint.templates.codeblock.Process;
+import dev.dfonline.flint.templates.codeblock.abstracts.CodeBlockSubAction;
 import dev.dfonline.flint.templates.codeblock.target.EntityTarget;
 import dev.dfonline.flint.templates.codeblock.target.PlayerTarget;
 
@@ -17,17 +19,24 @@ import java.util.Optional;
 
 public record Invoke(
         Value.Variable invoking,
+        Optional<Value.Variable> subInvoking,
         List<Value> arguments,
         Optional<Block> childBlock
 ) implements Statement {
     public dev.akarah.purpur.parser.ast.Invoke withChildBlock(Block block) {
-        return new dev.akarah.purpur.parser.ast.Invoke(invoking, arguments, Optional.of(block));
+        return new dev.akarah.purpur.parser.ast.Invoke(invoking, subInvoking, arguments, Optional.of(block));
     }
 
     @Override
     public void lowerToParsable(StringBuilder builder, int depth) {
 
         invoking.lowerToParsable(builder, depth);
+
+        subInvoking.ifPresent(subInvoking -> {
+            builder.append("[");
+            subInvoking.lowerToParsable(builder, depth);
+            builder.append("]");
+        });
 
 
         builder.append("(");
@@ -94,6 +103,17 @@ public record Invoke(
         if (actionType == null) {
             return;
         }
+
+        ActionType blockTagActionType;
+        if(this.subInvoking.isPresent()) {
+            blockTagActionType = MappingsRepository.get().getActionType(
+                    new MappingsRepository.ScriptFunction(this.subInvoking.orElseThrow().name())
+                            .name()
+            );
+        } else {
+            blockTagActionType = actionType;
+        }
+
         var arguments = new Arguments();
         int idx = 0;
         var tagsWritten = Lists.newArrayList();
@@ -112,7 +132,7 @@ public record Invoke(
                 }
                 tagsWritten.add(dfTag.tag());
             }
-            var createdArg = arg.createArgument(ctx, actionType, idx);
+            var createdArg = arg.createArgument(ctx, blockTagActionType, idx);
             if(createdArg != null) arguments.add(createdArg);
             idx += 1;
         }
@@ -122,8 +142,8 @@ public record Invoke(
                         tag.slot(),
                         tag.defaultOption(),
                         tag.name(),
-                        actionType.name(),
-                        MappingsRepository.fancyNameToId(actionType.codeblockName())
+                        blockTagActionType.name(),
+                        MappingsRepository.fancyNameToId(blockTagActionType.codeblockName())
                 ));
             }
         }
@@ -209,11 +229,39 @@ public record Invoke(
 
         // control flow blocks
         if (this.invoking.name().contains("repeat.")) {
-            ctx.codeBlocks().add(new Repeat(
+            var cb = new Repeat(
                     actionType.name(),
                     "",
                     false
-            ).setArguments(arguments));
+            );
+            cb.setArguments(arguments);
+            if(this.subInvoking.isPresent()) {
+                System.out.println(blockTagActionType);
+                var subAction = MappingsRepository.get().actionTypeToDfSubActionsMap().get(blockTagActionType);
+                if(subAction == null) {
+                    ctx.errors().add(new SpannedException(
+                            "Sub-action blocks must have a valid action",
+                            this.invoking.spanData()
+                    ));
+                }
+                cb.setSubAction(subAction);
+            }
+            ctx.codeBlocks().add(cb);
+        }
+        if (this.invoking.name().contains("select.")) {
+            var cb = new SelectObject(
+                    actionType.name(),
+                    "",
+                    false
+            );
+            cb.setArguments(arguments);
+            if(this.subInvoking.isPresent()) {
+                System.out.println(blockTagActionType);
+                cb.setSubAction(
+                        MappingsRepository.get().actionTypeToDfSubActionsMap().get(blockTagActionType)
+                );
+            }
+            ctx.codeBlocks().add(cb);
         }
         if (this.invoking.name().contains("control.")) {
             ctx.codeBlocks().add(new Control(actionType.name()).setArguments(arguments));

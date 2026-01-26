@@ -4,6 +4,7 @@ import com.google.common.collect.Lists;
 import dev.akarah.purpur.lexer.TokenTree;
 import dev.akarah.purpur.mappings.MappingsRepository;
 import dev.akarah.purpur.misc.ParseResult;
+import dev.akarah.purpur.misc.SpanData;
 import dev.akarah.purpur.misc.SpannedException;
 import dev.akarah.purpur.parser.ast.Block;
 import dev.akarah.purpur.parser.ast.Invoke;
@@ -86,6 +87,27 @@ public class Parser {
         try {
             var ident = expect(TokenTree.Identifier.class);
 
+            var subAction = Optional.<Value.Variable>empty();
+            if(peek() instanceof TokenTree.Brackets) {
+                var subActionTokens = expect(TokenTree.Brackets.class);
+
+                if(subActionTokens.children().size() < 5) {
+                    this.errors.add(new SpannedException(
+                            "Sub-action blocks must have a valid action",
+                            subActionTokens.spanData()
+                    ));
+                }
+                if(subActionTokens.children().getFirst() instanceof TokenTree.Identifier(String name, SpanData spanData)) {
+                    subAction = Optional.of(new Value.Variable(name, "line", spanData));
+                } else {
+                    this.errors.add(new SpannedException(
+                            "Sub-action blocks must have a valid action in it's place",
+                            subActionTokens.spanData()
+                    ));
+                }
+            }
+
+
             var args = parseValues();
 
             var block = Optional.<Block>empty();
@@ -95,6 +117,7 @@ public class Parser {
 
             return new Invoke(
                     new Value.Variable(ident.name(), "line", ident.spanData()),
+                    subAction,
                     args,
                     block
             );

@@ -160,10 +160,13 @@ public class MappingsRepository {
     Map<String, String> dfCodeBlockToScript = Maps.newHashMap();
     Map<String, String> scriptToDfCodeBlock = Maps.newHashMap();
     Map<String, ActionType> scriptToActionType = Maps.newHashMap();
+    Map<ActionType, String> actionTypeToScript = Maps.newHashMap();
     Map<DfBlockTag, ScriptBlockTag> dfTagToScript = Maps.newHashMap();
     Map<ScriptBlockTag, DfBlockTag> scriptTagToDfTag = Maps.newHashMap();
     Map<DfGameValue, ScriptGameValue> dfGameValueToScript = Maps.newHashMap();
     Map<ScriptGameValue, DfGameValue> scriptGameValueToDf = Maps.newHashMap();
+    Map<String, ActionType> dfSubActionToActionType = Maps.newHashMap();
+    Map<ActionType, String> actionTypeToDfSubAction = Maps.newHashMap();
 
     public static MappingsRepository get() {
         return INSTANCE;
@@ -209,6 +212,13 @@ public class MappingsRepository {
             INSTANCE.dfCodeBlockToScript.put(dfName, scriptName);
             INSTANCE.scriptToDfCodeBlock.put(scriptName, dfName);
             INSTANCE.scriptToActionType.put(scriptName, action);
+            INSTANCE.actionTypeToScript.put(action, scriptName);
+
+            INSTANCE.actionTypeToDfSubAction.put(action, action.name());
+            for(var alias : action.aliases()) {
+                INSTANCE.dfSubActionToActionType.put(alias, action);
+                INSTANCE.actionTypeToDfSubAction.put(action, alias);
+            }
 
             for(var tag : action.tags()) {
                 for(var option : tag.options()) {
@@ -285,5 +295,21 @@ public class MappingsRepository {
                 .stream()
                 .map(ScriptFunction::new)
                 .collect(Collectors.toSet());
+    }
+
+    public Map<String, ActionType> dfSubActionsToActionTypeMap() {
+        return this.dfSubActionToActionType;
+    }
+
+    public Map<ActionType, String> actionTypeToDfSubActionsMap() {
+        return this.actionTypeToDfSubAction;
+    }
+
+    public Collection<ActionType> allActionTypes() {
+        return this.scriptToActionType.values();
+    }
+
+    public ActionType getSubAction(String scriptName) {
+        return this.dfSubActionToActionType.get(scriptName);
     }
 }

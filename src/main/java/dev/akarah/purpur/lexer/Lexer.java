@@ -10,6 +10,9 @@ import dev.akarah.purpur.parser.ast.Value;
 import org.jspecify.annotations.Nullable;
 
 import java.util.List;
+import java.util.Optional;
+import java.util.function.BiFunction;
+import java.util.function.Function;
 import java.util.function.Predicate;
 
 public class Lexer {
@@ -104,61 +107,16 @@ public class Lexer {
             expect('=');
             return new TokenTree.Equals(this.endSpan(start));
         }
-        // TODO: refactor this into a function so we don't duplicate our code PLEASE
-        if(stringReader.peek() == '{') {
-            var start = this.stringReader.getCursor();
-            expect('{');
-            var trees = Lists.<TokenTree>newArrayList();
-            while(stringReader.canRead()) {
-                stringReader.skipWhitespace();
-                if(!stringReader.canRead() || stringReader.peek() == '}') break;
-                var token = parseSingleToken();
-                if(token != null) trees.add(token);
-            }
-            for(int i = 0; i < 10; i++) {
-                trees.add(new TokenTree.EndOfStream(new SpanData(this.stringReader.getString(), this.stringReader.getString().length(), this.stringReader.getString().length())));
-            }
-            if(stringReader.canRead() && stringReader.peek() == '}') {
-                expect('}');
-            }
-            return new TokenTree.Braces(trees, this.endSpan(start));
-        }
-        if(stringReader.peek() == '(') {
-            var start = this.stringReader.getCursor();
-            expect('(');
-            var trees = Lists.<TokenTree>newArrayList();
-            while(stringReader.canRead()) {
-                stringReader.skipWhitespace();
-                if(!stringReader.canRead() || stringReader.peek() == ')') break;
-                var token = parseSingleToken();
-                if(token != null) trees.add(token);
-            }
-            for(int i = 0; i < 10; i++) {
-                trees.add(new TokenTree.EndOfStream(new SpanData(this.stringReader.getString(), this.stringReader.getString().length(), this.stringReader.getString().length())));
-            }
-            if(stringReader.canRead() && stringReader.peek() == ')') {
-                expect(')');
-            }
-            return new TokenTree.Parenthesis(trees, this.endSpan(start));
-        }
-        if(stringReader.peek() == '[') {
-            var start = this.stringReader.getCursor();
-            expect('[');
-            var trees = Lists.<TokenTree>newArrayList();
-            while(stringReader.canRead()) {
-                stringReader.skipWhitespace();
-                if(!stringReader.canRead() || stringReader.peek() == ']') break;
-                var token = parseSingleToken();
-                if(token != null) trees.add(token);
-            }
-            for(int i = 0; i < 10; i++) {
-                trees.add(new TokenTree.EndOfStream(new SpanData(this.stringReader.getString(), this.stringReader.getString().length(), this.stringReader.getString().length())));
-            }
-            if(stringReader.canRead() && stringReader.peek() == ']') {
-                expect(']');
-            }
-            return new TokenTree.Brackets(trees, this.endSpan(start));
-        }
+
+        var braces = lexGroup('{', '}', TokenTree.Braces::new);
+        if(braces != null) return braces;
+        var parens = lexGroup('(', ')', TokenTree.Parenthesis::new);
+        if(parens != null) return parens;
+        var brackets = lexGroup('[', ']', TokenTree.Brackets::new);
+        if(brackets != null) return brackets;
+        var angleBrackets = lexGroup('<', '>', TokenTree.AngleBrackets::new);
+        if(angleBrackets != null) return angleBrackets;
+
         if(stringReader.peek() == ';') {
             var start = this.stringReader.getCursor();
             expect(';');
@@ -212,5 +170,27 @@ public class Lexer {
 
     public SpanData endSpan(int start) {
         return new SpanData(this.stringReader.getString(), start, this.stringReader.getCursor());
+    }
+
+    public @Nullable TokenTree lexGroup(char startCh, char endCh, BiFunction<List<TokenTree>, SpanData, TokenTree> constructor) {
+        if(stringReader.peek() == startCh) {
+            var start = this.stringReader.getCursor();
+            expect(startCh);
+            var trees = Lists.<TokenTree>newArrayList();
+            while(stringReader.canRead()) {
+                stringReader.skipWhitespace();
+                if(!stringReader.canRead() || stringReader.peek() == endCh) break;
+                var token = parseSingleToken();
+                if(token != null) trees.add(token);
+            }
+            for(int i = 0; i < 10; i++) {
+                trees.add(new TokenTree.EndOfStream(new SpanData(this.stringReader.getString(), this.stringReader.getString().length(), this.stringReader.getString().length())));
+            }
+            if(stringReader.canRead() && stringReader.peek() == endCh) {
+                expect(endCh);
+            }
+            return constructor.apply(trees, this.endSpan(start));
+        }
+        return null;
     }
 }

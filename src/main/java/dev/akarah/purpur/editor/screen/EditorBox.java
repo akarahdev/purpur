@@ -61,7 +61,7 @@ public class EditorBox extends MultiLineEditBox {
                 ),
                 // functions after namespaces
                 new HighlightGroup(
-                        Pattern.compile("(?<=\\.)(.*?)(?=\\()"),
+                        Pattern.compile("(?<=\\.)(.*?)(?=([(<\\[\\]]))"),
                         ARGB.color(255, 255, 170, 170)
                 ),
                 // scopes

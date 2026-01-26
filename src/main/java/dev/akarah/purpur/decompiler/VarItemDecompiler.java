@@ -45,8 +45,6 @@ public class VarItemDecompiler {
                 yield new Value.TagLiteral(tag.tag(), tag.option(), null);
             }
             case GameValueArgument gameValueArgument -> {
-                System.out.println(gameValueArgument.getType());
-                System.out.println(gameValueArgument.getTarget().name());
                 System.out.println(new MappingsRepository.DfGameValue(gameValueArgument.getType(),  gameValueArgument.getTarget().name()));
                 System.out.println(MappingsRepository.get().getScriptGameValue(new MappingsRepository.DfGameValue(gameValueArgument.getType(),  gameValueArgument.getTarget().name())));
                 var tag = MappingsRepository.get().getScriptGameValue(new MappingsRepository.DfGameValue(gameValueArgument.getType(),  gameValueArgument.getTarget().name()));
