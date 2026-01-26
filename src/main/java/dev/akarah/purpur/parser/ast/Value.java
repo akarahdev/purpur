@@ -59,7 +59,7 @@ sealed public interface Value extends AST {
         }
 
         public Argument createArgument(CodegenContext ctx, ActionType actionType, int argIndex) {
-            return new NumberArgument(argIndex, Double.parseDouble(this.literal));
+            return new NumberArgument(argIndex, this.literal);
         }
     }
 
