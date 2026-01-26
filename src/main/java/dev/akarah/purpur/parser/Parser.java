@@ -248,6 +248,48 @@ public class Parser {
                         vecKeyword.spanData()
                 );
             }
+            case TokenTree.SoundKeyword soundKeyword -> {
+                var args = parseValues();
+                if(args.size() != 3) {
+                    this.errors.add(new SpannedException(
+                            "A sound constructor must have 3 arguments",
+                            soundKeyword.spanData()
+                    ));
+                    yield null;
+                }
+
+                var arg1 = args.get(0);
+                if(arg1 instanceof Value.Variable variable) {
+                    var arg2 = args.get(1);
+                    if(arg2 instanceof Value.Number volume) {
+                        var arg3 = args.get(2);
+                        if(arg3 instanceof Value.Number pitch) {
+                            yield new Value.SoundLiteral(
+                                    variable.name(),
+                                    Double.parseDouble(volume.literal()),
+                                    Double.parseDouble(pitch.literal()),
+                                    soundKeyword.spanData()
+                            );
+                        } else {
+                            this.errors.add(new SpannedException(
+                                    "Third argument must be the pitch",
+                                    arg3.spanData()
+                            ));
+                        }
+                    } else {
+                        this.errors.add(new SpannedException(
+                                "Second argument must be the volume",
+                                arg2.spanData()
+                        ));
+                    }
+                } else {
+                    this.errors.add(new SpannedException(
+                            "First argument must be an ID",
+                            arg1.spanData()
+                    ));
+                }
+                yield null;
+            }
             case TokenTree.ItemKeyword itemKeyword -> {
                 var args = parseValues();
                 if(args.isEmpty()) {

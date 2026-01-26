@@ -5,6 +5,8 @@ import dev.akarah.purpur.parser.ast.Value;
 import dev.dfonline.flint.templates.argument.*;
 import dev.dfonline.flint.templates.argument.abstracts.Argument;
 
+import java.util.Map;
+
 public class VarItemDecompiler {
     public static Value decompile(Argument argument) {
         return switch (argument) {
@@ -52,6 +54,15 @@ public class VarItemDecompiler {
             }
             case ItemArgument itemArgument -> new Value.ItemStackVarItem(itemArgument.getItem(), null);
             case HintArgument hintArgument -> new Value.HintVarItem(null);
+            case SoundArgument soundArgument -> {
+                var dfSound = new MappingsRepository.DfSound(soundArgument.getSound(), soundArgument.getVariant());
+                yield new Value.SoundLiteral(
+                        MappingsRepository.get().getScriptSound(dfSound).id(),
+                        soundArgument.getVolume(),
+                        soundArgument.getPitch(),
+                        null
+                );
+            }
             default -> new Value.UnknownVarItem(null);
         };
     }

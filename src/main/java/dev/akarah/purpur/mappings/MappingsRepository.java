@@ -5,6 +5,7 @@ import dev.dfonline.flint.actiondump.ActionDump;
 import dev.dfonline.flint.actiondump.codeblocks.ActionType;
 import org.apache.commons.text.CaseUtils;
 import org.jspecify.annotations.NonNull;
+import org.jspecify.annotations.Nullable;
 
 import java.util.*;
 import java.util.stream.Collectors;
@@ -157,6 +158,14 @@ public class MappingsRepository {
         }
     }
 
+    public record DfSound(String sound, @Nullable String variant) {
+
+    }
+
+    public record ScriptSound(String id) {}
+
+
+
     Map<String, String> dfCodeBlockToScript = Maps.newHashMap();
     Map<String, String> scriptToDfCodeBlock = Maps.newHashMap();
     Map<String, ActionType> scriptToActionType = Maps.newHashMap();
@@ -167,6 +176,8 @@ public class MappingsRepository {
     Map<ScriptGameValue, DfGameValue> scriptGameValueToDf = Maps.newHashMap();
     Map<String, ActionType> dfSubActionToActionType = Maps.newHashMap();
     Map<ActionType, String> actionTypeToDfSubAction = Maps.newHashMap();
+    Map<DfSound, ScriptSound> dfSoundToScript = Maps.newHashMap();
+    Map<ScriptSound, DfSound> scriptSoundToDf = Maps.newHashMap();
 
     public static MappingsRepository get() {
         return INSTANCE;
@@ -257,7 +268,34 @@ public class MappingsRepository {
                 INSTANCE.scriptGameValueToDf.put(scriptVal, dfVal);
             }
         }
-        System.out.println(INSTANCE.dfGameValueToScript.keySet());
+
+        INSTANCE.scriptSoundToDf.clear();
+        INSTANCE.dfSoundToScript.clear();
+
+        for(var sound : dump.sounds()) {
+            var iconName = sound.icon().name().replaceAll("<(.*?)>", "");
+            if(sound.variants() != null) {
+                for(var variant : sound.variants()) {
+                    var scriptId = new ScriptSound(
+                            CaseUtils.toCamelCase(iconName, false, ' ')
+                                    + "."
+                                    + CaseUtils.toCamelCase(variant.id(), false, ' ', '_')
+                    );
+                    var dfId = new DfSound(iconName, variant.id());
+                    INSTANCE.scriptSoundToDf.put(scriptId, dfId);
+                    INSTANCE.dfSoundToScript.put(dfId, scriptId);
+                }
+            }
+            var scriptId = new ScriptSound(
+                    CaseUtils.toCamelCase(iconName, false, ' ')
+            );
+            var dfId = new DfSound(iconName, null);
+            INSTANCE.scriptSoundToDf.put(scriptId, dfId);
+            INSTANCE.dfSoundToScript.put(dfId, scriptId);
+        }
+
+        System.out.println(INSTANCE.dfSoundToScript.keySet());
+
     }
 
     public ScriptFunction getScriptFunction(DfFunction dfName) {
@@ -311,5 +349,13 @@ public class MappingsRepository {
 
     public ActionType getSubAction(String scriptName) {
         return this.dfSubActionToActionType.get(scriptName);
+    }
+
+    public ScriptSound getScriptSound(DfSound dfSound) {
+        return this.dfSoundToScript.get(dfSound);
+    }
+
+    public DfSound getDfSound(ScriptSound scriptSound) {
+        return this.scriptSoundToDf.get(scriptSound);
     }
 }

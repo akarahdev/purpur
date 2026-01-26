@@ -17,6 +17,7 @@ public interface TokenTree {
     record GameKeyword(SpanData spanData) implements TokenTree {}
     record SavedKeyword(SpanData spanData) implements TokenTree {}
     record GameValueKeyword(SpanData spanData) implements TokenTree {}
+    record SoundKeyword(SpanData spanData) implements TokenTree {}
     record ParamKeyword(SpanData spanData) implements TokenTree {}
     record PluralKeyword(SpanData spanData) implements TokenTree {}
     record OptionalKeyword(SpanData spanData) implements TokenTree {}

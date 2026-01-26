@@ -90,6 +90,7 @@ public class Lexer {
                 case "param" -> new TokenTree.ParamKeyword(this.endSpan(start));
                 case "plural" -> new TokenTree.PluralKeyword(this.endSpan(start));
                 case "optional" -> new TokenTree.OptionalKeyword(this.endSpan(start));
+                case "sound" -> new TokenTree.SoundKeyword(this.endSpan(start));
                 default -> new TokenTree.Identifier(sb.toString(), this.endSpan(start));
             };
         }
