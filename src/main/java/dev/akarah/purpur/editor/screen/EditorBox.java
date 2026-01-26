@@ -1,7 +1,12 @@
 package dev.akarah.purpur.editor.screen;
 
+import com.google.common.collect.Lists;
 import com.mojang.blaze3d.platform.cursor.CursorTypes;
+import dev.akarah.purpur.lexer.Lexer;
+import dev.akarah.purpur.misc.SpannedException;
 import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.input.CharacterEvent;
+import net.minecraft.client.input.KeyEvent;
 import net.minecraft.network.chat.Component;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.components.MultiLineEditBox;
@@ -16,6 +21,9 @@ import java.util.Objects;
 import java.util.regex.Pattern;
 
 public class EditorBox extends MultiLineEditBox {
+    List<SpannedException> spannedExceptions = Lists.newArrayList();
+    boolean dirty;
+
     public static List<HighlightGroup> groups() {
         return List.of(
                 // numbers
@@ -88,7 +96,7 @@ public class EditorBox extends MultiLineEditBox {
     // eventually will be `purpur:code` when i feel like fixing it
     public static FontDescription OUR_FONT = new FontDescription.Resource(Identifier.fromNamespaceAndPath("minecraft", "default"));
 
-    protected void renderHighlightedLine(String currentLineText, int lineStartX, int currentLineY, @NonNull GuiGraphics guiGraphics) {
+    protected void renderHighlightedLine(String currentLineText, int lineStartX, int currentLineY, @NonNull GuiGraphics guiGraphics, int lineStartIndex, int lineEndIndex) {
         var currentLineComp = Component.literal(currentLineText).withStyle(style -> style.withFont(OUR_FONT));
         guiGraphics.drawString(this.font, currentLineComp, lineStartX, currentLineY, this.textColor, this.textShadow);
 
@@ -103,6 +111,26 @@ public class EditorBox extends MultiLineEditBox {
                 guiGraphics.drawString(this.font, highlightedCompFound, lineOffset, currentLineY, group.color, this.textShadow);
             }
         }
+
+        try {
+            for(var exception : this.spannedExceptions) {
+                var start = exception.spanData().start();
+                var end = exception.spanData().end();
+                if(start >= lineStartIndex && end <= lineEndIndex) {
+                    var beforeExceptionComp = Component.literal(currentLineText.substring(0, start - lineStartIndex)).withStyle(style -> style.withFont(OUR_FONT));
+                    guiGraphics.drawString(
+                            this.font,
+                            Component.literal("_".repeat(end - start + 1)).withStyle(s -> s.withFont(OUR_FONT)),
+                            lineStartX + this.font.width(beforeExceptionComp),
+                            currentLineY,
+                            ARGB.color(133, 255, 0, 0),
+                            this.textShadow
+                    );
+                }
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 
     @Override
@@ -112,7 +140,7 @@ public class EditorBox extends MultiLineEditBox {
             return;
         }
         int cursorIndex = this.textField.cursor();
-        boolean shouldRenderBlinkingCursor = this.isFocused() && (Util.getMillis() - this.focusedTime) / 300L % 2L == 0L;
+        boolean shouldRenderBlinkingCursor = this.isFocused();
         boolean cursorWithinText = cursorIndex < textBuffer.length();
         int cursorPixelX = 0;
         int lastLineY = 0;
@@ -127,7 +155,7 @@ public class EditorBox extends MultiLineEditBox {
             if(textLineIsWithinArea) {
                 if (shouldRenderBlinkingCursor && cursorWithinText && cursorIndex >= currentLineView.beginIndex() && cursorIndex <= currentLineView.endIndex()) {
                     var textBeforeCursor = textBuffer.substring(currentLineView.beginIndex(), cursorIndex);
-                    this.renderHighlightedLine(currentLineText, lineStartX, currentLineY, guiGraphics);
+                    this.renderHighlightedLine(currentLineText, lineStartX, currentLineY, guiGraphics, currentLineView.beginIndex(), currentLineView.endIndex());
                     cursorPixelX = lineStartX + this.font.width(Component.literal(textBeforeCursor).withStyle(s -> s.withFont(OUR_FONT)));
                     if (!cursorRendered) {
                         int caretTopY = currentLineY - 1;
@@ -138,7 +166,7 @@ public class EditorBox extends MultiLineEditBox {
                     }
                 } else {
                     var lineToRender = currentLineText;
-                    this.renderHighlightedLine(lineToRender, lineStartX, currentLineY, guiGraphics);
+                    this.renderHighlightedLine(lineToRender, lineStartX, currentLineY, guiGraphics, currentLineView.beginIndex(), currentLineView.endIndex());
                     cursorPixelX = lineStartX + this.font.width(Component.literal(lineToRender).withStyle(s -> s.withFont(OUR_FONT))) - 1;
                 }
             }
@@ -195,6 +223,20 @@ public class EditorBox extends MultiLineEditBox {
 
         if (this.isHovered()) {
             guiGraphics.requestCursor(CursorTypes.IBEAM);
+        }
+    }
+
+    public void pushErrors() {
+        try {
+            this.spannedExceptions.clear();
+            var lex = new Lexer(this.textField.value());
+            var toks = lex.parse();
+            if(!lex.errors().isEmpty()) {
+                this.spannedExceptions.addAll(lex.errors());
+                System.out.println(lex.errors());
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
         }
     }
 

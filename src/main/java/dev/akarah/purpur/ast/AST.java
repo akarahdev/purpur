@@ -90,7 +90,7 @@ public sealed interface AST {
     sealed interface Value extends AST {
         record Variable(String name, String scope) implements Value {
             public static boolean charIsAllowedInIdentifier(int c) {
-                return Character.isAlphabetic(c) || Character.isDigit(c) || c == '_' || c == '.' || c == '/';
+                return Character.isAlphabetic(c) || Character.isDigit(c) || c == '_' || c == '.' || c == '/' || c == ':';
             }
 
             public boolean hasNormalIdentifier() {

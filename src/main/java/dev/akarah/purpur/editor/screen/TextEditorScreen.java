@@ -1,5 +1,6 @@
 package dev.akarah.purpur.editor.screen;
 
+import dev.akarah.purpur.lexer.Lexer;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.components.MultiLineEditBox;
@@ -34,15 +35,20 @@ public class TextEditorScreen extends Screen {
 
         this.editBox = new EditorBox(offX, offY, this.width - (offX * 2), this.height - (offY * 2));
 
+        this.editBox.textField.setValueListener(value -> {
+            this.editBox.pushErrors();
+        });
+
         int buttonY = offY;
-        for(int i = 0; i < 11; i++) {
-            var button = Button.builder(Component.literal("Tab"), bt -> {})
-                    .pos(offX / 6, buttonY)
-                    .width(offX * 2 / 3)
-                    .build();
-            buttonY += button.getHeight() + 4;
-            this.addRenderableWidget(button);
-        }
+
+        var lexButton = Button.builder(Component.literal("Lex"), bt -> {
+            var lexer = new Lexer(this.editBox.getValue());
+            var toks = lexer.parse();
+        })
+            .pos(offX / 6, buttonY)
+            .width(offX * 2 / 3)
+            .build();
+        this.addRenderableWidget(lexButton);
 
         var text = new MultiLineTextWidget(
                 offX,
