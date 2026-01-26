@@ -89,7 +89,7 @@ public class Parser {
             }
 
             return new AST.Statement.Invoke(
-                    new AST.Value.Variable(ident.name(), "line"),
+                    new AST.Value.Variable(ident.name(), "line", ident.spanData()),
                     args,
                     block
             );
@@ -100,21 +100,21 @@ public class Parser {
 
     public AST.Value parseValue() {
         return switch (read()) {
-            case TokenTree.Identifier identifier -> new AST.Value.Variable(identifier.name(), "line");
-            case TokenTree.Number number -> new AST.Value.Number(number.value());
-            case TokenTree.StringLiteral stringLiteral -> new AST.Value.StringLiteral(stringLiteral.value());
-            case TokenTree.ComponentLiteral componentLiteral -> new AST.Value.ComponentLiteral(componentLiteral.value());
+            case TokenTree.Identifier identifier -> new AST.Value.Variable(identifier.name(), "line", identifier.spanData());
+            case TokenTree.Number number -> new AST.Value.Number(number.value(), number.spanData());
+            case TokenTree.StringLiteral stringLiteral -> new AST.Value.StringLiteral(stringLiteral.value(), stringLiteral.spanData());
+            case TokenTree.ComponentLiteral componentLiteral -> new AST.Value.ComponentLiteral(componentLiteral.value(), componentLiteral.spanData());
             case TokenTree.LocalKeyword localKeyword -> {
                 var name = expect(TokenTree.Identifier.class);
-                yield new AST.Value.Variable(name.name(), "local");
+                yield new AST.Value.Variable(name.name(), "local", name.spanData());
             }
             case TokenTree.GameKeyword gameKeyword -> {
                 var name = expect(TokenTree.Identifier.class);
-                yield new AST.Value.Variable(name.name(), "game");
+                yield new AST.Value.Variable(name.name(), "game", name.spanData());
             }
             case TokenTree.SavedKeyword savedKeyword -> {
                 var name = expect(TokenTree.Identifier.class);
-                yield new AST.Value.Variable(name.name(), "saved");
+                yield new AST.Value.Variable(name.name(), "saved", name.spanData());
             }
             case TokenTree.TagKeyword tagKeyword -> {
                 var ident = expect(TokenTree.Identifier.class);
@@ -126,7 +126,7 @@ public class Parser {
                     ));
                     yield null;
                 }
-                yield new AST.Value.TagLiteral(split[0], split[1]);
+                yield new AST.Value.TagLiteral(split[0], split[1], ident.spanData());
             }
             default -> {
                 this.index -= 1;

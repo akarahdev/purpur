@@ -4,6 +4,7 @@ import com.google.common.collect.Lists;
 import com.mojang.blaze3d.platform.cursor.CursorTypes;
 import dev.akarah.purpur.lexer.Lexer;
 import dev.akarah.purpur.misc.SpannedException;
+import dev.akarah.purpur.parser.CodegenContext;
 import dev.akarah.purpur.parser.Parser;
 import dev.dfonline.flint.data.DFItem;
 import dev.dfonline.flint.templates.CodeBlocks;
@@ -255,7 +256,14 @@ public class EditorBox extends MultiLineEditBox {
             if(i == null) {
                 return;
             }
-            i.buildTemplate(blocks);
+            var ctx = new CodegenContext(Lists.<SpannedException>newArrayList(), blocks);
+            i.buildTemplate(ctx);
+
+            if(!ctx.errors().isEmpty()) {
+                this.spannedExceptions.addAll(ctx.errors());
+                System.out.println(ctx.errors());
+            }
+
             var template = new Template();
             template.setBlocks(blocks);
             System.out.println(blocks);

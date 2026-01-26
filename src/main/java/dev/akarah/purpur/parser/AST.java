@@ -3,6 +3,8 @@ package dev.akarah.purpur.parser;
 import com.google.common.collect.Lists;
 import dev.akarah.purpur.decompiler.CodeBlockDecompiler;
 import dev.akarah.purpur.mappings.MappingsRepository;
+import dev.akarah.purpur.misc.SpanData;
+import dev.akarah.purpur.misc.SpannedException;
 import dev.dfonline.flint.actiondump.codeblocks.ActionType;
 import dev.dfonline.flint.templates.Arguments;
 import dev.dfonline.flint.templates.CodeBlocks;
@@ -81,7 +83,7 @@ public sealed interface AST {
             }
 
             @Override
-            public void buildTemplate(CodeBlocks codeBlocks) {
+            public void buildTemplate(CodegenContext ctx) {
                 var lookupId = new MappingsRepository.ScriptFunction(this.invoking.name());
                 var actionType = MappingsRepository.get().getActionType(lookupId.name());
                 if(actionType == null) {
@@ -91,11 +93,18 @@ public sealed interface AST {
                 int idx = 0;
                 var tagsWritten = Lists.newArrayList();
                 for(var arg : this.arguments) {
-                    if(arg instanceof Value.TagLiteral(String tag, String option)) {
+                    if(arg instanceof Value.TagLiteral(String tag, String option, SpanData spanData)) {
                         var dfTag = MappingsRepository.get().getDfTag(new MappingsRepository.ScriptBlockTag(tag, option));
+                        if(dfTag == null) {
+                            ctx.errors().add(new SpannedException(
+                                    tag + "." + option + " is not a valid block tag for this object",
+                                    spanData
+                            ));
+                            continue;
+                        }
                         tagsWritten.add(dfTag.tag());
                     }
-                    arguments.add(arg.createArgument(actionType, idx));
+                    arguments.add(arg.createArgument(ctx, actionType, idx));
                     idx += 1;
                 }
                 for(var tag : actionType.tags()) {
@@ -110,85 +119,85 @@ public sealed interface AST {
                     }
                 }
                 if(this.invoking.name().contains("playerEvent.")) {
-                    codeBlocks.add(new PlayerEvent(
+                    ctx.codeBlocks().add(new PlayerEvent(
                             actionType.name(),
                             false
                     ));
                 }
                 if(this.invoking.name().contains("entityEvent.")) {
-                    codeBlocks.add(new EntityEvent(
+                    ctx.codeBlocks().add(new EntityEvent(
                             actionType.name(),
                             false
                     ));
                 }
                 if(this.invoking.name().contains("player.")) {
-                    codeBlocks.add(new PlayerAction(
+                    ctx.codeBlocks().add(new PlayerAction(
                             actionType.name(),
                             PlayerTarget.NONE
                     ).setArguments(arguments));
                 }
                 if(this.invoking.name().contains("ifPlayer.")) {
-                    codeBlocks.add(new IfPlayer(
+                    ctx.codeBlocks().add(new IfPlayer(
                             actionType.name(),
                             PlayerTarget.NONE,
                             false
                     ).setArguments(arguments));
                 }
                 if(this.invoking.name().contains("entity.")) {
-                    codeBlocks.add(new EntityAction(
+                    ctx.codeBlocks().add(new EntityAction(
                             EntityTarget.NONE,
                             actionType.name()
                     ).setArguments(arguments));
                 }
                 if(this.invoking.name().contains("ifEntity.")) {
-                    codeBlocks.add(new IfEntity(
+                    ctx.codeBlocks().add(new IfEntity(
                             actionType.name(),
                             EntityTarget.NONE,
                             false
                     ).setArguments(arguments));
                 }
                 if(this.invoking.name().contains("ifGame.")) {
-                    codeBlocks.add(new IfGame(
+                    ctx.codeBlocks().add(new IfGame(
                             actionType.name(),
                             false
                     ).setArguments(arguments));
                 }
                 if(this.invoking.name().contains("game.")) {
-                    codeBlocks.add(new GameAction(actionType.name()).setArguments(arguments));
+                    ctx.codeBlocks().add(new GameAction(actionType.name()).setArguments(arguments));
                 }
                 if(this.invoking.name().contains("repeat.")) {
-                    codeBlocks.add(new Repeat(
+                    ctx.codeBlocks().add(new Repeat(
                             actionType.name(),
                             "",
                             false
                     ).setArguments(arguments));
                 }
                 if(this.invoking.name().contains("control.")) {
-                    codeBlocks.add(new Control(actionType.name()).setArguments(arguments));
+                    ctx.codeBlocks().add(new Control(actionType.name()).setArguments(arguments));
                 }
                 this.childBlock.ifPresent(childBlock -> {
                     if(this.invoking.name().contains("if")) {
-                        codeBlocks.add(new Bracket(Bracket.Type.NORMAL, Bracket.Direction.OPEN));
-                        childBlock.statements.forEach(childStatement -> childStatement.buildTemplate(codeBlocks));
-                        codeBlocks.add(new Bracket(Bracket.Type.NORMAL, Bracket.Direction.CLOSE));
+                        ctx.codeBlocks().add(new Bracket(Bracket.Type.NORMAL, Bracket.Direction.OPEN));
+                        childBlock.statements.forEach(childStatement -> childStatement.buildTemplate(ctx));
+                        ctx.codeBlocks().add(new Bracket(Bracket.Type.NORMAL, Bracket.Direction.CLOSE));
                     }
                     if(this.invoking.name().contains("repeat")) {
-                        codeBlocks.add(new Bracket(Bracket.Type.REPEAT, Bracket.Direction.OPEN));
-                        childBlock.statements.forEach(childStatement -> childStatement.buildTemplate(codeBlocks));
-                        codeBlocks.add(new Bracket(Bracket.Type.REPEAT, Bracket.Direction.CLOSE));
+                        ctx.codeBlocks().add(new Bracket(Bracket.Type.REPEAT, Bracket.Direction.OPEN));
+                        childBlock.statements.forEach(childStatement -> childStatement.buildTemplate(ctx));
+                        ctx.codeBlocks().add(new Bracket(Bracket.Type.REPEAT, Bracket.Direction.CLOSE));
                     }
                     if(this.invoking.name().contains("select")) {
-                        childBlock.statements.forEach(childStatement -> childStatement.buildTemplate(codeBlocks));
-                        codeBlocks.add(new SelectObject("Reset", "", false));
+                        childBlock.statements.forEach(childStatement -> childStatement.buildTemplate(ctx));
+                        ctx.codeBlocks().add(new SelectObject("Reset", "", false));
                     }
                     if(this.invoking.name().contains("Event")) {
-                        childBlock.statements.forEach(childStatement -> childStatement.buildTemplate(codeBlocks));
+                        childBlock.statements.forEach(childStatement -> childStatement.buildTemplate(ctx));
                     }
                 });
             }
         }
 
-        void buildTemplate(CodeBlocks codeBlocks);
+        void buildTemplate(CodegenContext ctx);
     }
 
     record Block(
@@ -210,7 +219,7 @@ public sealed interface AST {
 
 
     sealed interface Value extends AST {
-        record Variable(String name, String scope) implements Value {
+        record Variable(String name, String scope, SpanData spanData) implements Value {
             public static boolean charIsAllowedInIdentifier(int c) {
                 return Character.isAlphabetic(c) || Character.isDigit(c) || c == '_' || c == '.' || c == '/' || c == ':';
             }
@@ -233,12 +242,12 @@ public sealed interface AST {
                 if(wrapIdent) builder.append("`");
             }
 
-            public Argument createArgument(ActionType actionType, int argIndex) {
+            public Argument createArgument(CodegenContext ctx, ActionType actionType, int argIndex) {
                 return new VariableArgument(argIndex, this.name, VariableScope.valueOf(this.scope.toUpperCase()));
             }
         }
 
-        record Number(String literal) implements Value {
+        record Number(String literal, SpanData spanData) implements Value {
             @Override
             public void lowerToParsable(StringBuilder builder, int depth) {
                 if(literal.contains("%")) {
@@ -248,12 +257,12 @@ public sealed interface AST {
                 }
             }
 
-            public Argument createArgument(ActionType actionType, int argIndex) {
+            public Argument createArgument(CodegenContext ctx, ActionType actionType, int argIndex) {
                 return new NumberArgument(argIndex, Double.parseDouble(this.literal));
             }
         }
 
-        record StringLiteral(String literal) implements Value {
+        record StringLiteral(String literal, SpanData spanData) implements Value {
             @Override
             public void lowerToParsable(StringBuilder builder, int depth) {
                 builder.append("\"");
@@ -261,12 +270,12 @@ public sealed interface AST {
                 builder.append("\"");
             }
 
-            public Argument createArgument(ActionType actionType, int argIndex) {
+            public Argument createArgument(CodegenContext ctx, ActionType actionType, int argIndex) {
                 return new StringArgument(argIndex, this.literal);
             }
         }
 
-        record ComponentLiteral(String literal) implements Value {
+        record ComponentLiteral(String literal, SpanData spanData) implements Value {
             @Override
             public void lowerToParsable(StringBuilder builder, int depth) {
                 builder.append("$\"");
@@ -274,12 +283,12 @@ public sealed interface AST {
                 builder.append("\"");
             }
 
-            public Argument createArgument(ActionType actionType, int argIndex) {
+            public Argument createArgument(CodegenContext ctx, ActionType actionType, int argIndex) {
                 return new TextArgument(argIndex, this.literal);
             }
         }
 
-        record TagLiteral(String tag, String option) implements Value {
+        record TagLiteral(String tag, String option, SpanData spanData) implements Value {
             @Override
             public void lowerToParsable(StringBuilder builder, int depth) {
                 builder.append("tag ");
@@ -288,13 +297,20 @@ public sealed interface AST {
                 builder.append(option);
             }
 
-            public Argument createArgument(ActionType actionType, int argIndex) {
+            public Argument createArgument(CodegenContext ctx, ActionType actionType, int argIndex) {
                 var dfTag = MappingsRepository.get().getDfTag(new MappingsRepository.ScriptBlockTag(this.tag, this.option));
+                if(dfTag == null) {
+                    ctx.errors().add(new SpannedException(
+                            this.tag + "." + this.option + " is not a valid block tag",
+                            this.spanData()
+                    ));
+                    return new NumberArgument(argIndex, 0);
+                }
                 return new TagArgument(argIndex, dfTag.option(), dfTag.tag(), actionType.name(), CodeBlockDecompiler.fancyNameToId(actionType.codeblockName()));
             }
         }
 
-        record LocationLiteral(double x, double y, double z, double pitch, double yaw) implements Value {
+        record LocationLiteral(double x, double y, double z, double pitch, double yaw, SpanData spanData) implements Value {
             @Override
             public void lowerToParsable(StringBuilder builder, int depth) {
                 builder.append("loc(")
@@ -310,12 +326,12 @@ public sealed interface AST {
                         .append(")");
             }
 
-            public Argument createArgument(ActionType actionType, int argIndex) {
+            public Argument createArgument(CodegenContext ctx, ActionType actionType, int argIndex) {
                 return new LocationArgument(argIndex, x, y, z, pitch, yaw, false);
             }
         }
 
-        record VecLiteral(double x, double y, double z) implements Value {
+        record VecLiteral(double x, double y, double z, SpanData spanData) implements Value {
             @Override
             public void lowerToParsable(StringBuilder builder, int depth) {
                 builder.append("vec(")
@@ -327,12 +343,12 @@ public sealed interface AST {
                         .append(")");
             }
 
-            public Argument createArgument(ActionType actionType, int argIndex) {
+            public Argument createArgument(CodegenContext ctx, ActionType actionType, int argIndex) {
                 return new VectorArgument(argIndex, x, y, z);
             }
         }
 
-        record ParameterLiteral(String name, String type, boolean plural, boolean optional, @Nullable Value defaultValue) implements Value {
+        record ParameterLiteral(String name, String type, boolean plural, boolean optional, @Nullable Value defaultValue, SpanData spanData) implements Value {
             @Override
             public void lowerToParsable(StringBuilder builder, int depth) {
                 builder.append("param ")
@@ -347,15 +363,15 @@ public sealed interface AST {
                 }
             }
 
-            public Argument createArgument(ActionType actionType, int argIndex) {
+            public Argument createArgument(CodegenContext ctx, ActionType actionType, int argIndex) {
                 if(defaultValue == null) {
                     return new ParameterArgument(argIndex, name, ParameterArgument.ParameterType.fromName(type), optional, plural, null);
                 }
-                return new ParameterArgument(argIndex, name, ParameterArgument.ParameterType.fromName(type), optional, plural, defaultValue.createArgument(actionType, argIndex));
+                return new ParameterArgument(argIndex, name, ParameterArgument.ParameterType.fromName(type), optional, plural, defaultValue.createArgument(ctx, actionType, argIndex));
             }
         }
 
-        record ItemStackVarItem(ItemStack item) implements Value {
+        record ItemStackVarItem(ItemStack item, SpanData spanData) implements Value {
             @Override
             public void lowerToParsable(StringBuilder builder, int depth) {
                 builder.append("item(")
@@ -365,12 +381,12 @@ public sealed interface AST {
                         .append(")");
             }
 
-            public Argument createArgument(ActionType actionType, int argIndex) {
+            public Argument createArgument(CodegenContext ctx, ActionType actionType, int argIndex) {
                 return new ItemArgument(argIndex, item);
             }
         }
 
-        record GameValue(String value, String target) implements Value {
+        record GameValue(String value, String target, SpanData spanData) implements Value {
             @Override
             public void lowerToParsable(StringBuilder builder, int depth) {
                 builder.append("gamevalue ")
@@ -379,35 +395,43 @@ public sealed interface AST {
                         .append(value);
             }
 
-            public Argument createArgument(ActionType actionType, int argIndex) {
+            public Argument createArgument(CodegenContext ctx, ActionType actionType, int argIndex) {
                 var out = MappingsRepository.get().getDfGameValue(new MappingsRepository.ScriptGameValue(target, value));
+                if(out == null) {
+                    ctx.errors().add(new SpannedException(
+                            this.target + "." + this.value + " is not a valid game value",
+                            this.spanData()
+                    ));
+                    return new NumberArgument(argIndex, 0);
+                }
                 return new GameValueArgument(argIndex, out.option(), GameValueArgument.GameValueTarget.valueOf(out.target().toUpperCase()));
             }
         }
 
-        record HintVarItem() implements Value {
+        record HintVarItem(SpanData spanData) implements Value {
             @Override
             public void lowerToParsable(StringBuilder builder, int depth) {
                 builder.append("hint");
             }
 
-            public Argument createArgument(ActionType actionType, int argIndex) {
+            public Argument createArgument(CodegenContext ctx, ActionType actionType, int argIndex) {
                 return new HintArgument(argIndex, HintArgument.HintType.FUNCTION);
             }
         }
 
-        record UnknownVarItem() implements Value {
+        record UnknownVarItem(SpanData spanData) implements Value {
             @Override
             public void lowerToParsable(StringBuilder builder, int depth) {
                 builder.append("?");
             }
 
-            public Argument createArgument(ActionType actionType, int argIndex) {
+            public Argument createArgument(CodegenContext ctx, ActionType actionType, int argIndex) {
                 return new NumberArgument(argIndex, 0);
             }
         }
 
-        Argument createArgument(ActionType actionType, int argIndex);
+        Argument createArgument(CodegenContext ctx, ActionType actionType, int argIndex);
+        SpanData spanData();
     }
 
     void lowerToParsable(StringBuilder builder, int depth);

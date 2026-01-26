@@ -78,7 +78,7 @@ public class CodeBlockDecompiler {
         switch (codeBlock) {
             case Function function -> {
                 return new AST.Statement.Invoke(
-                        new AST.Value.Variable("func." + function.getFunctionName(), "line"),
+                        new AST.Value.Variable("func." + function.getFunctionName(), "line", null),
                         function.getArguments().getOrderedList()
                                 .stream()
                                 .map(VarItemDecompiler::decompile)
@@ -88,7 +88,7 @@ public class CodeBlockDecompiler {
             }
             case Process process -> {
                 return new AST.Statement.Invoke(
-                        new AST.Value.Variable("proc." + process.getProcessName(), "line"),
+                        new AST.Value.Variable("proc." + process.getProcessName(), "line", null),
                         process.getArguments().getOrderedList()
                                 .stream()
                                 .map(VarItemDecompiler::decompile)
@@ -98,7 +98,7 @@ public class CodeBlockDecompiler {
             }
             case CallFunction callFunction -> {
                 return new AST.Statement.Invoke(
-                        new AST.Value.Variable("func." + callFunction.getData(), "line"),
+                        new AST.Value.Variable("func." + callFunction.getData(), "line", null),
                         callFunction.getArguments().getOrderedList()
                                 .stream()
                                 .map(VarItemDecompiler::decompile)
@@ -108,7 +108,7 @@ public class CodeBlockDecompiler {
             }
             case StartProcess startProcess -> {
                 return new AST.Statement.Invoke(
-                        new AST.Value.Variable("proc." + startProcess.getData(), "line"),
+                        new AST.Value.Variable("proc." + startProcess.getData(), "line", null),
                         startProcess.getArguments().getOrderedList()
                                 .stream()
                                 .map(VarItemDecompiler::decompile)
@@ -120,7 +120,7 @@ public class CodeBlockDecompiler {
                 var dfName = new MappingsRepository.DfFunction("PLAYER EVENT", playerEvent.getAction());
                 var scriptName = MappingsRepository.get().getScriptFunction(dfName);
                 return new AST.Statement.Invoke(
-                        new AST.Value.Variable(scriptName.name(), "line"),
+                        new AST.Value.Variable(scriptName.name(), "line", null),
                         List.of(),
                         Optional.empty()
                 );
@@ -129,7 +129,7 @@ public class CodeBlockDecompiler {
                 var dfName = new MappingsRepository.DfFunction("ENTITY EVENT", entityEvent.getAction());
                 var scriptName = MappingsRepository.get().getScriptFunction(dfName);
                 return new AST.Statement.Invoke(
-                        new AST.Value.Variable(scriptName.name(), "line"),
+                        new AST.Value.Variable(scriptName.name(), "line", null),
                         List.of(),
                         Optional.empty()
                 );
@@ -138,7 +138,7 @@ public class CodeBlockDecompiler {
                 var dfName = new MappingsRepository.DfFunction(idToFancyName(action.getBlock()), action.getAction());
                 var scriptName = MappingsRepository.get().getScriptFunction(dfName);
                 return new AST.Statement.Invoke(
-                        new AST.Value.Variable(scriptName.name(), "line"),
+                        new AST.Value.Variable(scriptName.name(), "line", null),
                         action.getArguments().getOrderedList()
                                 .stream()
                                 .map(VarItemDecompiler::decompile)
@@ -148,14 +148,14 @@ public class CodeBlockDecompiler {
             }
             case Else elseBlock -> {
                 return new AST.Statement.Invoke(
-                        new AST.Value.Variable("else", "line"),
+                        new AST.Value.Variable("else", "line", null),
                         List.of(),
                         Optional.empty()
                 );
             }
             default -> {
                 return new AST.Statement.Invoke(
-                        new AST.Value.Variable("?", "line"),
+                        new AST.Value.Variable("?", "line", null),
                         List.of(),
                         Optional.empty()
                 );
