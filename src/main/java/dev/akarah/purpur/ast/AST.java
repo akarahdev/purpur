@@ -1,5 +1,6 @@
 package dev.akarah.purpur.ast;
 
+import com.google.common.collect.Lists;
 import dev.akarah.purpur.decompiler.CodeBlockDecompiler;
 import dev.akarah.purpur.mappings.MappingsRepository;
 import dev.dfonline.flint.actiondump.codeblocks.ActionType;
@@ -85,11 +86,30 @@ public sealed interface AST {
             public void buildTemplate(CodeBlocks codeBlocks) {
                 var lookupId = new MappingsRepository.ScriptFunction(this.invoking.name());
                 var actionType = MappingsRepository.get().getActionType(lookupId.name());
+                if(actionType == null) {
+                    return;
+                }
                 var arguments = new Arguments();
                 int idx = 0;
+                var tagsWritten = Lists.newArrayList();
                 for(var arg : this.arguments) {
+                    if(arg instanceof Value.TagLiteral(String tag, String option)) {
+                        var dfTag = MappingsRepository.get().getDfTag(new MappingsRepository.ScriptBlockTag(tag, option));
+                        tagsWritten.add(dfTag.tag());
+                    }
                     arguments.add(arg.createArgument(actionType, idx));
                     idx += 1;
+                }
+                for(var tag : actionType.tags()) {
+                    if(!tagsWritten.contains(tag.name())) {
+                        arguments.add(new TagArgument(
+                                tag.slot(),
+                                tag.defaultOption(),
+                                tag.name(),
+                                actionType.name(),
+                                CodeBlockDecompiler.fancyNameToId(actionType.codeblockName())
+                        ));
+                    }
                 }
                 if(this.invoking.name().contains("playerEvent.")) {
                     codeBlocks.add(new PlayerEvent(
@@ -272,7 +292,7 @@ public sealed interface AST {
 
             public Argument createArgument(ActionType actionType, int argIndex) {
                 var dfTag = MappingsRepository.get().getDfTag(new MappingsRepository.ScriptBlockTag(this.tag, this.option));
-                return new TagArgument(argIndex, dfTag.tag(), dfTag.option(), actionType.name(), CodeBlockDecompiler.fancyNameToId(actionType.codeblockName()));
+                return new TagArgument(argIndex, dfTag.option(), dfTag.tag(), actionType.name(), CodeBlockDecompiler.fancyNameToId(actionType.codeblockName()));
             }
         }
 

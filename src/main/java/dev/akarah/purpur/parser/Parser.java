@@ -3,6 +3,7 @@ package dev.akarah.purpur.parser;
 import com.google.common.collect.Lists;
 import dev.akarah.purpur.ast.AST;
 import dev.akarah.purpur.lexer.TokenTree;
+import dev.akarah.purpur.mappings.MappingsRepository;
 import dev.akarah.purpur.misc.SpannedException;
 import net.minecraft.world.level.block.state.BlockState;
 import org.jspecify.annotations.Nullable;
@@ -86,9 +87,6 @@ public class Parser {
                 while(blockParser.canRead()) {
                     var invoke = blockParser.parseInvoke();
                     if(invoke != null) invokes.add(invoke);
-//                    if(blockParser.canRead()) {
-//                        blockParser.expect(TokenTree.Semicolon.class);
-//                    }
                 }
                 block = Optional.of(new AST.Block(invokes));
             }
@@ -120,6 +118,18 @@ public class Parser {
             case TokenTree.SavedKeyword savedKeyword -> {
                 var name = expect(TokenTree.Identifier.class);
                 yield new AST.Value.Variable(name.name(), "saved");
+            }
+            case TokenTree.TagKeyword tagKeyword -> {
+                var ident = expect(TokenTree.Identifier.class);
+                var split = ident.name().split("\\.");
+                if(split.length != 2) {
+                    this.errors.add(new SpannedException(
+                            "A block tag's ID must have two parts, formatted like `tag.option`",
+                            ident.spanData()
+                    ));
+                    yield null;
+                }
+                yield new AST.Value.TagLiteral(split[0], split[1]);
             }
             default -> {
                 this.index -= 1;
