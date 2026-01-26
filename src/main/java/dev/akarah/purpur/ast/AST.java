@@ -200,7 +200,7 @@ public sealed interface AST {
             }
         }
 
-        record GameValue(String target, String value) implements Value {
+        record GameValue(String value, String target) implements Value {
             @Override
             public void lowerToParsable(StringBuilder builder, int depth) {
                 builder.append("gamevalue ")

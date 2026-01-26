@@ -145,7 +145,7 @@ public class MappingsRepository {
                         .replaceAll("<(.*?)>", "");
                 var dfVal = new DfGameValue(name, target);
                 var scriptVal = new ScriptGameValue(
-                        CaseUtils.toCamelCase(name, false, ' '),
+                        CaseUtils.toCamelCase(name.replace("-", " "), false, ' '),
                         CaseUtils.toCamelCase(
                                 target
                                         .replace("-", "")
