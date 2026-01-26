@@ -120,7 +120,6 @@ public class MappingsRepository {
                 }
             }
             var b = scriptActionName;
-            System.out.println(a + " -> " + b);
             var scriptName = scriptCodeblockName + "." + scriptActionName;
             var dfName = action.codeblockName() + "." + action.name();
 

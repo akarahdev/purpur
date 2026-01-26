@@ -171,7 +171,7 @@ public sealed interface AST {
         record VecLiteral(double x, double y, double z) implements Value {
             @Override
             public void lowerToParsable(StringBuilder builder, int depth) {
-                builder.append("loc(")
+                builder.append("vec(")
                         .append(x)
                         .append(", ")
                         .append(y)
@@ -184,11 +184,12 @@ public sealed interface AST {
         record ParameterLiteral(String name, String type, boolean plural, boolean optional, @Nullable Value defaultValue) implements Value {
             @Override
             public void lowerToParsable(StringBuilder builder, int depth) {
-                builder.append(name)
-                        .append(": ")
-                        .append(type);
-                if(plural) builder.append("...");
-                if(optional) builder.append("?");
+                builder.append("param ")
+                        .append(name)
+                        .append(" = ");
+                if(plural) builder.append("plural ");
+                if(optional) builder.append("optional ");
+                builder.append(type);
                 if(defaultValue != null) {
                     builder.append(" = ");
                     defaultValue.lowerToParsable(builder, depth);

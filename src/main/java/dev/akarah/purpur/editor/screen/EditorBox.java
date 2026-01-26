@@ -30,17 +30,17 @@ public class EditorBox extends MultiLineEditBox {
                 ),
                 // namespaces
                 new HighlightGroup(
-                        Pattern.compile("(repeat|func|player|ifPlayer|entity|ifEntity|game|ifGame|Event|control|vars|ifVars|proc|select)(?=\\.)"),
+                        Pattern.compile("(repeat|func|player|playerEvent|ifPlayer|entity|entityEvent|ifEntity|game|gameEvent|ifGame|control|vars|ifVars|proc|select)(?=\\.)"),
                         ARGB.color(255, 255, 100, 100)
                 ),
                 // pseudo functions
                 new HighlightGroup(
-                        Pattern.compile("(?<=[ (,])(item|loc)(?=\\()"),
+                        Pattern.compile("(?<=[ (,])(item|loc|vec)(?=\\()"),
                         ARGB.color(255, 170, 170, 255)
                 ),
                 // special syntaxes
                 new HighlightGroup(
-                        Pattern.compile("(?<=[ (,])(tag|gamevalue) "),
+                        Pattern.compile("(?<=[ (,])(tag|gamevalue|param) "),
                         ARGB.color(255, 170, 170, 255)
                 ),
                 // functions after namespaces
@@ -50,13 +50,18 @@ public class EditorBox extends MultiLineEditBox {
                 ),
                 // scopes
                 new HighlightGroup(
-                        Pattern.compile("(game|local|line|saved|tag) (?=[a-zA-Z_0-9?/]*)"),
+                        Pattern.compile("(game|local|line|saved|tag|plural|optional) (?=[a-zA-Z_0-9?/]*)"),
                         ARGB.color(255, 170, 170, 255)
                 ),
                 // strings
                 new HighlightGroup(
                         Pattern.compile("\"(.*?)\""),
                         ARGB.color(255, 170, 255, 170)
+                ),
+                // comments
+                new HighlightGroup(
+                        Pattern.compile("//(.*?)$"),
+                        ARGB.color(255, 100, 100, 100)
                 )
         );
     }
