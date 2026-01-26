@@ -80,7 +80,8 @@ public class EditorBox extends MultiLineEditBox {
 
     record HighlightGroup(Pattern pattern, int color) {}
 
-    public static FontDescription OUR_FONT = new FontDescription.Resource(Identifier.fromNamespaceAndPath("purpur", "code"));
+    // eventually will be `purpur:code` when i feel like fixing it
+    public static FontDescription OUR_FONT = new FontDescription.Resource(Identifier.fromNamespaceAndPath("minecraft", "default"));
 
     protected void renderHighlightedLine(String currentLineText, int lineStartX, int currentLineY, @NonNull GuiGraphics guiGraphics) {
         var currentLineComp = Component.literal(currentLineText).withStyle(style -> style.withFont(OUR_FONT));
