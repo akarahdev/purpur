@@ -88,13 +88,16 @@ public sealed interface AST {
     sealed interface Value extends AST {
         record Variable(String name, String scope) implements Value {
             public static boolean charIsAllowedInIdentifier(int c) {
-                return Character.isAlphabetic(c) || Character.isDigit(c) || c == '_' || c == '.';
+                return Character.isAlphabetic(c) || Character.isDigit(c) || c == '_' || c == '.' || c == '/';
+            }
+
+            public boolean hasNormalIdentifier() {
+                return name.chars().allMatch(Variable::charIsAllowedInIdentifier);
             }
 
             @Override
             public void lowerToParsable(StringBuilder builder, int depth) {
-                var wrapIdent = name.chars()
-                        .noneMatch(Variable::charIsAllowedInIdentifier);
+                var wrapIdent = !hasNormalIdentifier();
                 switch (scope) {
                     case "line" -> {}
                     case "local" -> builder.append("local ");
