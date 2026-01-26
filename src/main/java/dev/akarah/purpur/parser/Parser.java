@@ -3,6 +3,9 @@ package dev.akarah.purpur.parser;
 import com.google.common.collect.Lists;
 import dev.akarah.purpur.lexer.TokenTree;
 import dev.akarah.purpur.misc.SpannedException;
+import dev.akarah.purpur.parser.ast.Block;
+import dev.akarah.purpur.parser.ast.Invoke;
+import dev.akarah.purpur.parser.ast.Value;
 import org.jspecify.annotations.Nullable;
 
 import java.util.List;
@@ -62,13 +65,13 @@ public class Parser {
         return this.errors;
     }
 
-    public AST.Statement.@Nullable Invoke parseInvoke() {
+    public @Nullable Invoke parseInvoke() {
         try {
             var ident = expect(TokenTree.Identifier.class);
             var paren = expect(TokenTree.Parenthesis.class);
 
             var argParser = new Parser(paren.children(), this.errors);
-            var args = Lists.<AST.Value>newArrayList();
+            var args = Lists.<Value>newArrayList();
             while(argParser.canRead()) {
                 var arg = argParser.parseValue();
                 args.add(arg);
@@ -77,19 +80,19 @@ public class Parser {
                 }
             }
 
-            var block = Optional.<AST.Block>empty();
+            var block = Optional.<Block>empty();
             if(peek() instanceof TokenTree.Braces braces) {
                 var blockParser = new Parser(braces.children(), this.errors);
-                var invokes = Lists.<AST.Statement.Invoke>newArrayList();
+                var invokes = Lists.<Invoke>newArrayList();
                 while(blockParser.canRead()) {
                     var invoke = blockParser.parseInvoke();
                     if(invoke != null) invokes.add(invoke);
                 }
-                block = Optional.of(new AST.Block(invokes));
+                block = Optional.of(new Block(invokes));
             }
 
-            return new AST.Statement.Invoke(
-                    new AST.Value.Variable(ident.name(), "line", ident.spanData()),
+            return new Invoke(
+                    new Value.Variable(ident.name(), "line", ident.spanData()),
                     args,
                     block
             );
@@ -98,23 +101,23 @@ public class Parser {
         }
     }
 
-    public AST.Value parseValue() {
+    public Value parseValue() {
         return switch (read()) {
-            case TokenTree.Identifier identifier -> new AST.Value.Variable(identifier.name(), "line", identifier.spanData());
-            case TokenTree.Number number -> new AST.Value.Number(number.value(), number.spanData());
-            case TokenTree.StringLiteral stringLiteral -> new AST.Value.StringLiteral(stringLiteral.value(), stringLiteral.spanData());
-            case TokenTree.ComponentLiteral componentLiteral -> new AST.Value.ComponentLiteral(componentLiteral.value(), componentLiteral.spanData());
+            case TokenTree.Identifier identifier -> new Value.Variable(identifier.name(), "line", identifier.spanData());
+            case TokenTree.Number number -> new Value.Number(number.value(), number.spanData());
+            case TokenTree.StringLiteral stringLiteral -> new Value.StringLiteral(stringLiteral.value(), stringLiteral.spanData());
+            case TokenTree.ComponentLiteral componentLiteral -> new Value.ComponentLiteral(componentLiteral.value(), componentLiteral.spanData());
             case TokenTree.LocalKeyword localKeyword -> {
                 var name = expect(TokenTree.Identifier.class);
-                yield new AST.Value.Variable(name.name(), "local", name.spanData());
+                yield new Value.Variable(name.name(), "local", name.spanData());
             }
             case TokenTree.GameKeyword gameKeyword -> {
                 var name = expect(TokenTree.Identifier.class);
-                yield new AST.Value.Variable(name.name(), "game", name.spanData());
+                yield new Value.Variable(name.name(), "game", name.spanData());
             }
             case TokenTree.SavedKeyword savedKeyword -> {
                 var name = expect(TokenTree.Identifier.class);
-                yield new AST.Value.Variable(name.name(), "saved", name.spanData());
+                yield new Value.Variable(name.name(), "saved", name.spanData());
             }
             case TokenTree.TagKeyword tagKeyword -> {
                 var ident = expect(TokenTree.Identifier.class);
@@ -126,7 +129,7 @@ public class Parser {
                     ));
                     yield null;
                 }
-                yield new AST.Value.TagLiteral(split[0], split[1], ident.spanData());
+                yield new Value.TagLiteral(split[0], split[1], ident.spanData());
             }
             default -> {
                 this.index -= 1;

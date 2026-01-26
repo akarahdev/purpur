@@ -1,8 +1,10 @@
 package dev.akarah.purpur.decompiler;
 
 import com.google.common.collect.Lists;
-import dev.akarah.purpur.parser.AST;
 import dev.akarah.purpur.mappings.MappingsRepository;
+import dev.akarah.purpur.parser.ast.Block;
+import dev.akarah.purpur.parser.ast.Invoke;
+import dev.akarah.purpur.parser.ast.Value;
 import dev.dfonline.flint.templates.CodeBlock;
 import dev.dfonline.flint.templates.codeblock.*;
 import dev.dfonline.flint.templates.codeblock.Process;
@@ -12,11 +14,11 @@ import java.util.List;
 import java.util.Optional;
 
 public class CodeBlockDecompiler {
-    public static AST.Statement.Invoke decompile(BracketManager.BracketDraft draft) {
+    public static Invoke decompile(BracketManager.BracketDraft draft) {
         var invoke = decompile(draft.codeBlock);
 
         if(draft.children != null) {
-            var block = new AST.Block(Lists.newArrayList());
+            var block = new Block(Lists.newArrayList());
             for(var child : draft.children) {
                 block.statements().add(decompile(child));
             }
@@ -74,11 +76,11 @@ public class CodeBlockDecompiler {
         };
     }
 
-    public static AST.Statement.Invoke decompile(CodeBlock codeBlock) {
+    public static Invoke decompile(CodeBlock codeBlock) {
         switch (codeBlock) {
             case Function function -> {
-                return new AST.Statement.Invoke(
-                        new AST.Value.Variable("func." + function.getFunctionName(), "line", null),
+                return new Invoke(
+                        new Value.Variable("func." + function.getFunctionName(), "line", null),
                         function.getArguments().getOrderedList()
                                 .stream()
                                 .map(VarItemDecompiler::decompile)
@@ -87,8 +89,8 @@ public class CodeBlockDecompiler {
                 );
             }
             case Process process -> {
-                return new AST.Statement.Invoke(
-                        new AST.Value.Variable("proc." + process.getProcessName(), "line", null),
+                return new Invoke(
+                        new Value.Variable("proc." + process.getProcessName(), "line", null),
                         process.getArguments().getOrderedList()
                                 .stream()
                                 .map(VarItemDecompiler::decompile)
@@ -97,8 +99,8 @@ public class CodeBlockDecompiler {
                 );
             }
             case CallFunction callFunction -> {
-                return new AST.Statement.Invoke(
-                        new AST.Value.Variable("func." + callFunction.getData(), "line", null),
+                return new Invoke(
+                        new Value.Variable("func." + callFunction.getData(), "line", null),
                         callFunction.getArguments().getOrderedList()
                                 .stream()
                                 .map(VarItemDecompiler::decompile)
@@ -107,8 +109,8 @@ public class CodeBlockDecompiler {
                 );
             }
             case StartProcess startProcess -> {
-                return new AST.Statement.Invoke(
-                        new AST.Value.Variable("proc." + startProcess.getData(), "line", null),
+                return new Invoke(
+                        new Value.Variable("proc." + startProcess.getData(), "line", null),
                         startProcess.getArguments().getOrderedList()
                                 .stream()
                                 .map(VarItemDecompiler::decompile)
@@ -119,8 +121,8 @@ public class CodeBlockDecompiler {
             case PlayerEvent playerEvent -> {
                 var dfName = new MappingsRepository.DfFunction("PLAYER EVENT", playerEvent.getAction());
                 var scriptName = MappingsRepository.get().getScriptFunction(dfName);
-                return new AST.Statement.Invoke(
-                        new AST.Value.Variable(scriptName.name(), "line", null),
+                return new Invoke(
+                        new Value.Variable(scriptName.name(), "line", null),
                         List.of(),
                         Optional.empty()
                 );
@@ -128,8 +130,8 @@ public class CodeBlockDecompiler {
             case EntityEvent entityEvent -> {
                 var dfName = new MappingsRepository.DfFunction("ENTITY EVENT", entityEvent.getAction());
                 var scriptName = MappingsRepository.get().getScriptFunction(dfName);
-                return new AST.Statement.Invoke(
-                        new AST.Value.Variable(scriptName.name(), "line", null),
+                return new Invoke(
+                        new Value.Variable(scriptName.name(), "line", null),
                         List.of(),
                         Optional.empty()
                 );
@@ -137,8 +139,8 @@ public class CodeBlockDecompiler {
             case CodeBlockAction action -> {
                 var dfName = new MappingsRepository.DfFunction(idToFancyName(action.getBlock()), action.getAction());
                 var scriptName = MappingsRepository.get().getScriptFunction(dfName);
-                return new AST.Statement.Invoke(
-                        new AST.Value.Variable(scriptName.name(), "line", null),
+                return new Invoke(
+                        new Value.Variable(scriptName.name(), "line", null),
                         action.getArguments().getOrderedList()
                                 .stream()
                                 .map(VarItemDecompiler::decompile)
@@ -147,15 +149,15 @@ public class CodeBlockDecompiler {
                 );
             }
             case Else elseBlock -> {
-                return new AST.Statement.Invoke(
-                        new AST.Value.Variable("else", "line", null),
+                return new Invoke(
+                        new Value.Variable("else", "line", null),
                         List.of(),
                         Optional.empty()
                 );
             }
             default -> {
-                return new AST.Statement.Invoke(
-                        new AST.Value.Variable("?", "line", null),
+                return new Invoke(
+                        new Value.Variable("?", "line", null),
                         List.of(),
                         Optional.empty()
                 );

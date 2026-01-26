@@ -3,9 +3,9 @@ package dev.akarah.purpur.lexer;
 import com.google.common.collect.Lists;
 import com.mojang.brigadier.StringReader;
 import com.mojang.brigadier.exceptions.CommandSyntaxException;
-import dev.akarah.purpur.parser.AST;
 import dev.akarah.purpur.misc.SpanData;
 import dev.akarah.purpur.misc.SpannedException;
+import dev.akarah.purpur.parser.ast.Value;
 import org.jspecify.annotations.Nullable;
 
 import java.util.List;
@@ -48,10 +48,10 @@ public class Lexer {
             }
             return new TokenTree.Number(sb.toString(), this.endSpan(start));
         }
-        if(AST.Value.Variable.charIsAllowedInIdentifier(stringReader.peek())) {
+        if(Value.Variable.charIsAllowedInIdentifier(stringReader.peek())) {
             var start = this.stringReader.getCursor();
             var sb = new StringBuilder();
-            while(this.stringReader.canRead() && AST.Value.Variable.charIsAllowedInIdentifier(stringReader.peek())) {
+            while(this.stringReader.canRead() && Value.Variable.charIsAllowedInIdentifier(stringReader.peek())) {
                 sb.append(stringReader.read());
             }
             return switch (sb.toString()) {
