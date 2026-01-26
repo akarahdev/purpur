@@ -2,9 +2,11 @@ package dev.akarah.purpur.parser;
 
 import com.google.common.collect.Lists;
 import dev.akarah.purpur.lexer.TokenTree;
+import dev.akarah.purpur.misc.ParseResult;
 import dev.akarah.purpur.misc.SpannedException;
 import dev.akarah.purpur.parser.ast.Block;
 import dev.akarah.purpur.parser.ast.Invoke;
+import dev.akarah.purpur.parser.ast.Program;
 import dev.akarah.purpur.parser.ast.Value;
 import org.jspecify.annotations.Nullable;
 
@@ -15,6 +17,11 @@ public class Parser {
     List<TokenTree> tokens;
     List<SpannedException> errors = Lists.newArrayList();
     int index = 0;
+
+    public static ParseResult<Program> parse(List<TokenTree> tokens) {
+        var res = new Parser(tokens).parse();
+        return new ParseResult<>(new Program(res.partialResult()), res.errors());
+    }
 
     public Parser(List<TokenTree> tokens) {
         this.tokens = tokens;
@@ -51,10 +58,6 @@ public class Parser {
         var tok = this.tokens.get(this.index);
         this.index += 1;
         if(!clazz.isInstance(tok)) {
-            this.errors.add(new SpannedException(
-                    "Expected " + clazz.getName() + ", found " + tok.getClass().getName(),
-                    tok.spanData()
-            ));
             throw new SpannedException("Expected " + clazz.getName() + ", found " + tok.getClass().getName(),
                     tok.spanData());
         }
@@ -63,6 +66,15 @@ public class Parser {
 
     public List<SpannedException> errors() {
         return this.errors;
+    }
+
+    public ParseResult<List<Invoke>> parse() {
+        var invokes = Lists.<Invoke>newArrayList();
+        while(canRead()) {
+            var invoke = parseInvoke();
+            if(invoke != null) invokes.add(invoke);
+        }
+        return new ParseResult<>(invokes, errors);
     }
 
     public @Nullable Invoke parseInvoke() {
@@ -82,6 +94,7 @@ public class Parser {
 
             var block = Optional.<Block>empty();
             if(peek() instanceof TokenTree.Braces braces) {
+                this.index += 1;
                 var blockParser = new Parser(braces.children(), this.errors);
                 var invokes = Lists.<Invoke>newArrayList();
                 while(blockParser.canRead()) {
@@ -96,6 +109,9 @@ public class Parser {
                     args,
                     block
             );
+        } catch (SpannedException e) {
+            this.errors.add(e);
+            return null;
         } catch (Exception e) {
             return null;
         }
@@ -133,6 +149,7 @@ public class Parser {
             }
             default -> {
                 this.index -= 1;
+                this.errors.add(new SpannedException("Unexpected token " + peek().getClass().getName(), peek().spanData()));
                 yield null;
             }
         };

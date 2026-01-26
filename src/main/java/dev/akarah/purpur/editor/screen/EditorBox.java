@@ -6,6 +6,7 @@ import dev.akarah.purpur.lexer.Lexer;
 import dev.akarah.purpur.misc.SpannedException;
 import dev.akarah.purpur.parser.CodegenContext;
 import dev.akarah.purpur.parser.Parser;
+import dev.akarah.purpur.parser.ast.AST;
 import dev.dfonline.flint.data.DFItem;
 import dev.dfonline.flint.templates.CodeBlocks;
 import dev.dfonline.flint.templates.Template;
@@ -238,52 +239,24 @@ public class EditorBox extends MultiLineEditBox {
     public void tryCompile() {
         try {
             this.spannedExceptions.clear();
-            var lex = new Lexer(this.textField.value());
-            var toks = lex.parse();
-            if(!lex.errors().isEmpty()) {
-                this.spannedExceptions.addAll(lex.errors());
-                System.out.println(lex.errors());
+
+            var templates = Lexer.parse(this.textField.value())
+                    .flatMap(Parser::parse)
+                    .flatMap(AST::buildTemplates);
+
+            if(templates.isSuccess()) {
+                for(var template : templates.partialResult()) {
+                    var packet = new ServerboundSetCreativeModeSlotPacket(
+                            Minecraft.getInstance().player.getInventory().getSelectedSlot(),
+                            template
+                    );
+                    Minecraft.getInstance().getConnection().send(packet);
+                    Minecraft.getInstance().player.getInventory().setSelectedItem(template);
+                }
+            } else {
+                this.spannedExceptions.addAll(templates.errors());
+                System.out.println(templates.errors());
             }
-
-            var parser = new Parser(toks);
-            var i = parser.parseInvoke();
-            if(!parser.errors().isEmpty()) {
-                this.spannedExceptions.addAll(parser.errors());
-                System.out.println(parser.errors());
-            }
-
-            var blocks = new CodeBlocks();
-            if(i == null) {
-                return;
-            }
-            var ctx = new CodegenContext(Lists.<SpannedException>newArrayList(), blocks);
-            i.buildTemplate(ctx);
-
-            if(!ctx.errors().isEmpty()) {
-                this.spannedExceptions.addAll(ctx.errors());
-                System.out.println(ctx.errors());
-            }
-
-            var template = new Template();
-            template.setBlocks(blocks);
-            System.out.println(blocks);
-
-            var item = new ItemStack(Items.CHEST);
-
-            var tag = new CompoundTag();
-            var publicValues = new CompoundTag();
-            publicValues.putString("hypercube:codetemplatedata", template.toJson().toString());
-            tag.put("PublicBukkitValues", publicValues);
-            item.set(
-                    DataComponents.CUSTOM_DATA,
-                    CustomData.of(tag)
-            );
-            var packet = new ServerboundSetCreativeModeSlotPacket(
-                    Minecraft.getInstance().player.getInventory().getSelectedSlot(),
-                    item
-            );
-            Minecraft.getInstance().getConnection().send(packet);
-            Minecraft.getInstance().player.getInventory().setSelectedItem(item);
         } catch (Exception e) {
             e.printStackTrace();
         }

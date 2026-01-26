@@ -3,6 +3,7 @@ package dev.akarah.purpur.lexer;
 import com.google.common.collect.Lists;
 import com.mojang.brigadier.StringReader;
 import com.mojang.brigadier.exceptions.CommandSyntaxException;
+import dev.akarah.purpur.misc.ParseResult;
 import dev.akarah.purpur.misc.SpanData;
 import dev.akarah.purpur.misc.SpannedException;
 import dev.akarah.purpur.parser.ast.Value;
@@ -23,7 +24,11 @@ public class Lexer {
         return errors;
     }
 
-    public List<TokenTree> parse() {
+    public static ParseResult<List<TokenTree>> parse(String string) {
+        return new Lexer(string).parse();
+    }
+
+    public ParseResult<List<TokenTree>> parse() {
         List<TokenTree> trees = Lists.newArrayList();
         trees.add(new TokenTree.StartOfStream(new SpanData(this.stringReader.getString(), 0, 0)));
         while(stringReader.canRead()) {
@@ -33,7 +38,7 @@ public class Lexer {
         for(int i = 0; i < 100; i++) {
             trees.add(new TokenTree.EndOfStream(new SpanData(this.stringReader.getString(), this.stringReader.getString().length(), this.stringReader.getString().length())));
         }
-        return trees;
+        return new ParseResult<>(trees, errors);
     }
 
     public @Nullable TokenTree parseSingleToken() {
