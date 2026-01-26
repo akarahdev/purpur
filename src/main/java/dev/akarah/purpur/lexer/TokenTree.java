@@ -122,6 +122,12 @@ public interface TokenTree {
             return "item";
         }
     }
+    record PotionKeyword(SpanData spanData) implements TokenTree {
+        @Override
+        public @NonNull String toString() {
+            return "potion";
+        }
+    }
     record TagKeyword(SpanData spanData) implements TokenTree {
         @Override
         public @NonNull String toString() {

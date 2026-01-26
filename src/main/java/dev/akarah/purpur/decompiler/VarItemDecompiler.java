@@ -64,6 +64,13 @@ public class VarItemDecompiler {
                 );
             }
             case ParticleArgument particleArgument -> new ParticleLiteral(particleArgument.getValues(), null);
+            case PotionArgument potionArgument -> {
+                for(var t : PotionArgument.PotionType.values()) {
+                    System.out.println(t.name() + " / " + t.getName());
+                }
+                System.out.println("recv " + potionArgument);
+                yield new PotionLiteral(potionArgument.getType(), potionArgument.getAmplifier(), potionArgument.getTicks(), null);
+            }
             default -> new UnknownVarItem(null);
         };
     }

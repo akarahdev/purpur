@@ -80,6 +80,7 @@ public class Lexer {
                 case "loc" -> new TokenTree.LocKeyword(this.endSpan(start));
                 case "vec" -> new TokenTree.VecKeyword(this.endSpan(start));
                 case "item" -> new TokenTree.ItemKeyword(this.endSpan(start));
+                case "potion" -> new TokenTree.PotionKeyword(this.endSpan(start));
                 case "tag" -> new TokenTree.TagKeyword(this.endSpan(start));
                 case "game" -> new TokenTree.GameKeyword(this.endSpan(start));
                 case "saved" -> new TokenTree.SavedKeyword(this.endSpan(start));

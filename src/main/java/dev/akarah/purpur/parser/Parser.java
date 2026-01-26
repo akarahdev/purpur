@@ -13,6 +13,7 @@ import dev.akarah.purpur.parser.ast.stmt.Invoke;
 import dev.akarah.purpur.parser.ast.Program;
 import dev.akarah.purpur.parser.ast.value.*;
 import dev.akarah.purpur.parser.ast.value.Number;
+import dev.dfonline.flint.templates.argument.PotionArgument;
 import net.minecraft.client.Minecraft;
 import net.minecraft.commands.arguments.NbtTagArgument;
 import net.minecraft.core.component.DataComponentPatch;
@@ -21,6 +22,7 @@ import net.minecraft.nbt.*;
 import net.minecraft.resources.Identifier;
 import net.minecraft.resources.RegistryOps;
 import net.minecraft.world.item.ItemStack;
+import org.apache.commons.lang3.StringUtils;
 import org.jspecify.annotations.Nullable;
 
 import java.io.DataInputStream;
@@ -478,6 +480,44 @@ public class Parser {
                         nbtData,
                         parens.children().getFirst().spanData()
                 );
+            }
+            case TokenTree.PotionKeyword potionKeyword -> {
+                var values = parseValues();
+                if(values.size() != 3) {
+                    this.errors.add(new SpannedException(
+                            "A potion constructor must have a potion ID, amplifier, and duration",
+                            potionKeyword.spanData()
+                    ));
+                }
+                if(
+                        values.getFirst() instanceof Variable potionVariable
+                        && values.get(1) instanceof Number amplifierNum
+                        && values.get(2) instanceof Number durationNum
+                ) {
+                    PotionArgument.PotionType potionEffectType = null;
+                    for(var type : PotionArgument.PotionType.values()) {
+                        if(potionVariable.name().substring(0, 4)
+                                .equalsIgnoreCase(type.getName().substring(0, 4))) {
+                            potionEffectType = type;
+                            break;
+                        }
+                    }
+                    if(potionEffectType == null) {
+                        this.errors.add(new SpannedException(
+                                "Invalid potion effect",
+                                potionVariable.spanData()
+                        ));
+                        yield null;
+                    }
+
+                    var amplifier = (int) Double.parseDouble(amplifierNum.literal());
+                    var duration = (int) Double.parseDouble(durationNum.literal());
+                    yield new PotionLiteral(potionEffectType, amplifier, duration, potionKeyword.spanData());
+                }this.errors.add(new SpannedException(
+                        "A potion constructor must have a potion ID, amplifier, and duration",
+                        potionKeyword.spanData()
+                ));
+                yield null;
             }
             default -> {
                 this.index -= 1;
