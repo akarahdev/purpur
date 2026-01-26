@@ -9,6 +9,7 @@ import dev.akarah.purpur.parser.CodegenContext;
 import dev.dfonline.flint.templates.Arguments;
 import dev.dfonline.flint.templates.argument.TagArgument;
 import dev.dfonline.flint.templates.codeblock.*;
+import dev.dfonline.flint.templates.codeblock.Process;
 import dev.dfonline.flint.templates.codeblock.target.EntityTarget;
 import dev.dfonline.flint.templates.codeblock.target.PlayerTarget;
 
@@ -76,6 +77,20 @@ public record Invoke(
     @Override
     public void buildTemplate(CodegenContext ctx) {
         var lookupId = new MappingsRepository.ScriptFunction(this.invoking.name());
+        if(lookupId.name().startsWith("proc.")) {
+            if(childBlock.isPresent()) {
+                lookupId = new MappingsRepository.ScriptFunction("process.dynamic");
+            } else {
+                lookupId = new MappingsRepository.ScriptFunction("startProcess.dynamic");
+            }
+        }
+        if(lookupId.name().startsWith("func.")) {
+            if(childBlock.isPresent()) {
+                lookupId = new MappingsRepository.ScriptFunction("function.dynamic");
+            } else {
+                lookupId = new MappingsRepository.ScriptFunction("callFunction.dynamic");
+            }
+        }
         var actionType = MappingsRepository.get().getActionType(lookupId.name());
         if (actionType == null) {
             return;
@@ -109,23 +124,19 @@ public record Invoke(
                 ));
             }
         }
-        if (this.invoking.name().contains("playerEvent.")) {
-            ctx.codeBlocks().add(new PlayerEvent(
-                    actionType.name(),
-                    false
-            ));
-        }
-        if (this.invoking.name().contains("entityEvent.")) {
-            ctx.codeBlocks().add(new EntityEvent(
-                    actionType.name(),
-                    false
-            ));
-        }
+
+        // player blocks
         if (this.invoking.name().contains("player.")) {
             ctx.codeBlocks().add(new PlayerAction(
                     actionType.name(),
                     PlayerTarget.NONE
             ).setArguments(arguments));
+        }
+        if (this.invoking.name().contains("playerEvent.")) {
+            ctx.codeBlocks().add(new PlayerEvent(
+                    actionType.name(),
+                    false
+            ));
         }
         if (this.invoking.name().contains("ifPlayer.")) {
             ctx.codeBlocks().add(new IfPlayer(
@@ -134,11 +145,19 @@ public record Invoke(
                     false
             ).setArguments(arguments));
         }
+
+        // entity blocks
         if (this.invoking.name().contains("entity.")) {
             ctx.codeBlocks().add(new EntityAction(
                     EntityTarget.NONE,
                     actionType.name()
             ).setArguments(arguments));
+        }
+        if (this.invoking.name().contains("entityEvent.")) {
+            ctx.codeBlocks().add(new EntityEvent(
+                    actionType.name(),
+                    false
+            ));
         }
         if (this.invoking.name().contains("ifEntity.")) {
             ctx.codeBlocks().add(new IfEntity(
@@ -147,6 +166,8 @@ public record Invoke(
                     false
             ).setArguments(arguments));
         }
+
+        // game blocks
         if (this.invoking.name().contains("ifGame.")) {
             ctx.codeBlocks().add(new IfGame(
                     actionType.name(),
@@ -156,6 +177,34 @@ public record Invoke(
         if (this.invoking.name().contains("game.")) {
             ctx.codeBlocks().add(new GameAction(actionType.name()).setArguments(arguments));
         }
+
+        // vars blocks
+        if(this.invoking.name().contains("vars.")) {
+            ctx.codeBlocks().add(new SetVariable(actionType.name()).setArguments(arguments));
+        }
+        if(this.invoking.name().contains("ifVars.")) {
+            ctx.codeBlocks().add(new IfVariable(actionType.name(), false).setArguments(arguments));
+        }
+
+        // funcs and procs
+        if(this.invoking.name().contains("func.")) {
+            var newName = this.invoking.name().replaceFirst("func\\.", "");
+            if(this.childBlock.isPresent()) {
+                ctx.codeBlocks().add(new Function(newName).setArguments(arguments));
+            } else {
+                ctx.codeBlocks().add(new CallFunction(newName).setArguments(arguments));
+            }
+        }
+        if(this.invoking.name().contains("proc.")) {
+            var newName = this.invoking.name().replaceFirst("proc\\.", "");
+            if(this.childBlock.isPresent()) {
+                ctx.codeBlocks().add(new Process(newName).setArguments(arguments));
+            } else {
+                ctx.codeBlocks().add(new StartProcess(newName).setArguments(arguments));
+            }
+        }
+
+        // control flow blocks
         if (this.invoking.name().contains("repeat.")) {
             ctx.codeBlocks().add(new Repeat(
                     actionType.name(),
@@ -171,6 +220,9 @@ public record Invoke(
                 ctx.codeBlocks().add(new Bracket(Bracket.Type.NORMAL, Bracket.Direction.OPEN));
                 childBlock.statements().forEach(childStatement -> childStatement.buildTemplate(ctx));
                 ctx.codeBlocks().add(new Bracket(Bracket.Type.NORMAL, Bracket.Direction.CLOSE));
+            }
+            if (this.invoking.name().contains("func.") || this.invoking.name().contains("func.")) {
+                childBlock.statements().forEach(childStatement -> childStatement.buildTemplate(ctx));
             }
             if (this.invoking.name().contains("repeat")) {
                 ctx.codeBlocks().add(new Bracket(Bracket.Type.REPEAT, Bracket.Direction.OPEN));

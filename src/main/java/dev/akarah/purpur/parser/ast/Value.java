@@ -101,7 +101,16 @@ sealed public interface Value extends AST {
                 ));
                 return new NumberArgument(argIndex, 0);
             }
-            return new TagArgument(argIndex, dfTag.option(), dfTag.tag(), actionType.name(), CodeBlockDecompiler.fancyNameToId(actionType.codeblockName()));
+            for(var tagPossibility : actionType.tags()) {
+                if(tagPossibility.name().equals(dfTag.tag())) {
+                    return new TagArgument(tagPossibility.slot(), dfTag.option(), dfTag.tag(), actionType.name(), CodeBlockDecompiler.fancyNameToId(actionType.codeblockName()));
+                }
+            }
+            ctx.errors().add(new SpannedException(
+                    this.tag + "." + this.option + " is not a valid block tag for this codeblock",
+                    this.spanData()
+            ));
+            return new NumberArgument(argIndex, 0);
         }
     }
 
