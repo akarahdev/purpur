@@ -28,54 +28,6 @@ public class CodeBlockDecompiler {
         return invoke;
     }
 
-    public static String idToFancyName(String id) {
-        return switch (id) {
-            case "player_action" -> "PLAYER ACTION";
-            case "if_var" -> "IF VARIABLE";
-            case "entity_action" -> "ENTITY ACTION";
-            case "if_entity" -> "IF ENTITY";
-            case "if_player" -> "IF PLAYER";
-            case "game_action" -> "GAME ACTION";
-            case "if_game" -> "IF GAME";
-            case "set_var" -> "SET VARIABLE";
-            case "control" -> "CONTROL";
-            case "else" -> "ELSE";
-            case "repeat" -> "REPEAT";
-            case "call_func" -> "CALL FUNCTION";
-            case "start_process" -> "START PROCESS";
-            case "func" -> "FUNCTION";
-            case "process" -> "PROCESS";
-            case "event" -> "PLAYER EVENT";
-            case "entity_event" -> "ENTITY EVENT";
-            case "select_obj" -> "SELECT OBJECT";
-            default -> null;
-        };
-    }
-
-    public static String fancyNameToId(String fancyName) {
-        return switch (fancyName) {
-            case "PLAYER ACTION" -> "player_action";
-            case "IF VARIABLE" -> "if_var";
-            case "ENTITY ACTION" -> "entity_action";
-            case "IF ENTITY" -> "if_entity";
-            case "IF PLAYER" -> "if_player";
-            case "GAME ACTION" -> "game_action";
-            case "IF GAME" -> "if_game";
-            case "SET VARIABLE" -> "set_var";
-            case "CONTROL" -> "control";
-            case "ELSE" -> "else";
-            case "REPEAT" -> "repeat";
-            case "CALL FUNCTION" -> "call_func";
-            case "START PROCESS" -> "start_process";
-            case "FUNCTION" -> "func";
-            case "PROCESS" -> "process";
-            case "PLAYER EVENT" -> "event";
-            case "ENTITY EVENT" -> "entity_event";
-            case "SELECT OBJECT" -> "select_obj";
-            default -> null;
-        };
-    }
-
     public static Invoke decompile(CodeBlock codeBlock) {
         switch (codeBlock) {
             case Function function -> {
@@ -137,7 +89,7 @@ public class CodeBlockDecompiler {
                 );
             }
             case CodeBlockAction action -> {
-                var dfName = new MappingsRepository.DfFunction(idToFancyName(action.getBlock()), action.getAction());
+                var dfName = new MappingsRepository.DfFunction(MappingsRepository.idToFancyName(action.getBlock()), action.getAction());
                 var scriptName = MappingsRepository.get().getScriptFunction(dfName);
                 return new Invoke(
                         new Value.Variable(scriptName.name(), "line", null),

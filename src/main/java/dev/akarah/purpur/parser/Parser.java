@@ -2,6 +2,7 @@ package dev.akarah.purpur.parser;
 
 import com.google.common.collect.Lists;
 import dev.akarah.purpur.lexer.TokenTree;
+import dev.akarah.purpur.mappings.MappingsRepository;
 import dev.akarah.purpur.misc.ParseResult;
 import dev.akarah.purpur.misc.SpannedException;
 import dev.akarah.purpur.parser.ast.Block;
@@ -288,6 +289,51 @@ public class Parser {
                 yield new Value.ItemStackVarItem(
                         is,
                         itemKeyword.spanData()
+                );
+            }
+            case TokenTree.ParamKeyword paramKeyword -> {
+                var paramName = expect(TokenTree.Identifier.class);
+                var paramTypeTokens = expect(TokenTree.Brackets.class);
+
+                boolean plural = false;
+                boolean optional = false;
+                String type = "any";
+                Value defaultValue = null;
+
+                for(var arg : paramTypeTokens.children()) {
+                    switch (arg) {
+                        case TokenTree.PluralKeyword pluralKeyword -> plural = true;
+                        case TokenTree.OptionalKeyword optionalKeyword -> optional = true;
+                        case TokenTree.Identifier identifier -> type = identifier.name();
+                        case TokenTree.EndOfStream end -> {}
+                        default -> this.errors.add(new SpannedException(
+                                "Invalid parameter modifier " + arg.getClass().getName() + " in parameter type",
+                                arg.spanData()
+                        ));
+                    }
+                }
+
+                if(peek() instanceof TokenTree.Equals) {
+                    expect(TokenTree.Equals.class);
+                    defaultValue = parseValue();
+                }
+
+                var newType = MappingsRepository.scriptTypeToDfType(type);
+                if(newType.isEmpty()) {
+                    this.errors.add(new SpannedException(
+                            type + " is not a valid parameter type",
+                            paramTypeTokens.spanData()
+                    ));
+                    yield new Value.Number("0", paramTypeTokens.spanData());
+                }
+
+                yield new Value.ParameterLiteral(
+                        paramName.name(),
+                        newType.orElseThrow(),
+                        plural,
+                        optional,
+                        defaultValue,
+                        paramTypeTokens.spanData()
                 );
             }
             default -> {

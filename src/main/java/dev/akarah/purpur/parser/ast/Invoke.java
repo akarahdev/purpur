@@ -1,7 +1,6 @@
 package dev.akarah.purpur.parser.ast;
 
 import com.google.common.collect.Lists;
-import dev.akarah.purpur.decompiler.CodeBlockDecompiler;
 import dev.akarah.purpur.mappings.MappingsRepository;
 import dev.akarah.purpur.misc.SpanData;
 import dev.akarah.purpur.misc.SpannedException;
@@ -124,7 +123,7 @@ public record Invoke(
                         tag.defaultOption(),
                         tag.name(),
                         actionType.name(),
-                        CodeBlockDecompiler.fancyNameToId(actionType.codeblockName())
+                        MappingsRepository.fancyNameToId(actionType.codeblockName())
                 ));
             }
         }

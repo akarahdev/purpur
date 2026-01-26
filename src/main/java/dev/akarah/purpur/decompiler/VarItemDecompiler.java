@@ -34,7 +34,7 @@ public class VarItemDecompiler {
                     );
             case ParameterArgument parameterArgument -> new Value.ParameterLiteral(
                     parameterArgument.getName(),
-                    parameterArgument.getType().name,
+                    MappingsRepository.dfTypeToScriptType(parameterArgument.getType().name).orElse("any"),
                     parameterArgument.isPlural(),
                     parameterArgument.isOptional(),
                     parameterArgument.getDefaultValue() == null ? null : decompile(parameterArgument.getDefaultValue()),

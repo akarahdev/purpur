@@ -1,6 +1,5 @@
 package dev.akarah.purpur.parser.ast;
 
-import dev.akarah.purpur.decompiler.CodeBlockDecompiler;
 import dev.akarah.purpur.mappings.MappingsRepository;
 import dev.akarah.purpur.misc.SpanData;
 import dev.akarah.purpur.misc.SpannedException;
@@ -103,7 +102,7 @@ sealed public interface Value extends AST {
             }
             for(var tagPossibility : actionType.tags()) {
                 if(tagPossibility.name().equals(dfTag.tag())) {
-                    return new TagArgument(tagPossibility.slot(), dfTag.option(), dfTag.tag(), actionType.name(), CodeBlockDecompiler.fancyNameToId(actionType.codeblockName()));
+                    return new TagArgument(tagPossibility.slot(), dfTag.option(), dfTag.tag(), actionType.name(), MappingsRepository.fancyNameToId(actionType.codeblockName()));
                 }
             }
             ctx.errors().add(new SpannedException(
@@ -160,10 +159,12 @@ sealed public interface Value extends AST {
         public void lowerToParsable(StringBuilder builder, int depth) {
             builder.append("param ")
                     .append(name)
-                    .append(" = ");
+                    .append("[");
             if (plural) builder.append("plural ");
             if (optional) builder.append("optional ");
+
             builder.append(type);
+            builder.append("]");
             if (defaultValue != null) {
                 builder.append(" = ");
                 defaultValue.lowerToParsable(builder, depth);

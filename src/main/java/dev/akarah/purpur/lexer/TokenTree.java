@@ -23,6 +23,7 @@ public interface TokenTree {
     record ItemKeyword(SpanData spanData) implements TokenTree {}
     record TagKeyword(SpanData spanData) implements TokenTree {}
     record Parenthesis(List<TokenTree> children, SpanData spanData) implements TokenTree {}
+    record Brackets(List<TokenTree> children, SpanData spanData) implements TokenTree {}
     record Braces(List<TokenTree> children, SpanData spanData) implements TokenTree {}
     record Equals(SpanData spanData) implements TokenTree {}
     record Comma(SpanData spanData) implements TokenTree {}

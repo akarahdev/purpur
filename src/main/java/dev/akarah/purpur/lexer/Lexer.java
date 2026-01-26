@@ -104,6 +104,7 @@ public class Lexer {
             expect('=');
             return new TokenTree.Equals(this.endSpan(start));
         }
+        // TODO: refactor this into a function so we don't duplicate our code PLEASE
         if(stringReader.peek() == '{') {
             var start = this.stringReader.getCursor();
             expect('{');
@@ -139,6 +140,24 @@ public class Lexer {
                 expect(')');
             }
             return new TokenTree.Parenthesis(trees, this.endSpan(start));
+        }
+        if(stringReader.peek() == '[') {
+            var start = this.stringReader.getCursor();
+            expect('[');
+            var trees = Lists.<TokenTree>newArrayList();
+            while(stringReader.canRead()) {
+                stringReader.skipWhitespace();
+                if(!stringReader.canRead() || stringReader.peek() == ']') break;
+                var token = parseSingleToken();
+                if(token != null) trees.add(token);
+            }
+            for(int i = 0; i < 10; i++) {
+                trees.add(new TokenTree.EndOfStream(new SpanData(this.stringReader.getString(), this.stringReader.getString().length(), this.stringReader.getString().length())));
+            }
+            if(stringReader.canRead() && stringReader.peek() == ']') {
+                expect(']');
+            }
+            return new TokenTree.Brackets(trees, this.endSpan(start));
         }
         if(stringReader.peek() == ';') {
             var start = this.stringReader.getCursor();
