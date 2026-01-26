@@ -87,6 +87,13 @@ public record Invoke(
 
     @Override
     public void buildTemplate(CodegenContext ctx) {
+        // else needs special logic
+        if(this.invoking.name().equals("else")) {
+            ctx.codeBlocks().add(new Else());
+            ctx.codeBlocks().add(new Bracket(Bracket.Type.NORMAL, Bracket.Direction.OPEN));
+            this.childBlock.ifPresent(childBlock -> childBlock.statements().forEach(childStatement -> childStatement.buildTemplate(ctx)));
+            ctx.codeBlocks().add(new Bracket(Bracket.Type.NORMAL, Bracket.Direction.CLOSE));
+        }
         var lookupId = new MappingsRepository.ScriptFunction(this.invoking.name());
         if(lookupId.name().startsWith("proc.")) {
             if(childBlock.isPresent()) {
