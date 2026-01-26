@@ -1,5 +1,7 @@
 package dev.akarah.purpur.parser.ast.value;
 
+import dev.akarah.purpur.lexer.Lexer;
+import dev.akarah.purpur.lexer.TokenTree;
 import dev.akarah.purpur.misc.SpanData;
 import dev.akarah.purpur.parser.CodegenContext;
 import dev.dfonline.flint.actiondump.codeblocks.ActionType;
@@ -13,7 +15,9 @@ public record Variable(String name, String scope, SpanData spanData) implements 
     }
 
     public boolean hasNormalIdentifier() {
-        return name.chars().allMatch(Variable::charIsAllowedInIdentifier);
+        var tok = new Lexer(name).parseSingleToken();
+        return name.chars().allMatch(Variable::charIsAllowedInIdentifier)
+                && tok instanceof TokenTree.Identifier;
     }
 
     @Override

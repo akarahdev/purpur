@@ -56,7 +56,7 @@ public class EditorBox extends MultiLineEditBox {
                 ),
                 // special syntaxes
                 new HighlightGroup(
-                        Pattern.compile("(?<=[ (,])(tag|gamevalue|param) "),
+                        Pattern.compile("(?<=[ (,])(tag|gamevalue|param|hint) "),
                         ARGB.color(255, 170, 170, 255)
                 ),
                 // functions after namespaces

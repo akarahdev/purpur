@@ -13,9 +13,9 @@ public record ParameterLiteral(String name, String type, boolean plural, boolean
                                SpanData spanData) implements Value {
     @Override
     public void lowerToParsable(StringBuilder builder, int depth) {
-        builder.append("param ")
-                .append(name)
-                .append("[");
+        builder.append("param ");
+        new Variable(name, "line", null).lowerToParsable(builder, depth);
+        builder.append("[");
         if (plural) builder.append("plural ");
         if (optional) builder.append("optional ");
 

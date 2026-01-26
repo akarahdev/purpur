@@ -134,6 +134,12 @@ public interface TokenTree {
             return "tag";
         }
     }
+    record HintKeyword(SpanData spanData) implements TokenTree {
+        @Override
+        public @NonNull String toString() {
+            return "tag";
+        }
+    }
     record Parenthesis(List<TokenTree> children, SpanData spanData) implements TokenTree {
         @Override
         public @NonNull String toString() {

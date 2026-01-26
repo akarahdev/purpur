@@ -82,6 +82,7 @@ public class Lexer {
                 case "item" -> new TokenTree.ItemKeyword(this.endSpan(start));
                 case "potion" -> new TokenTree.PotionKeyword(this.endSpan(start));
                 case "tag" -> new TokenTree.TagKeyword(this.endSpan(start));
+                case "hint" -> new TokenTree.HintKeyword(this.endSpan(start));
                 case "game" -> new TokenTree.GameKeyword(this.endSpan(start));
                 case "saved" -> new TokenTree.SavedKeyword(this.endSpan(start));
                 case "local" -> new TokenTree.LocalKeyword(this.endSpan(start));

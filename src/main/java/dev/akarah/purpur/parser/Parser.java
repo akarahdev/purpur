@@ -519,6 +519,7 @@ public class Parser {
                 ));
                 yield null;
             }
+            case TokenTree.HintKeyword hintKeyword -> new HintVarItem(hintKeyword.spanData());
             default -> {
                 this.index -= 1;
                 this.errors.add(new SpannedException("Unexpected token " + peek().getClass().getName(), peek().spanData()));
