@@ -63,6 +63,7 @@ public class VarItemDecompiler {
                         null
                 );
             }
+            case ParticleArgument particleArgument -> new ParticleLiteral(particleArgument.getValues(), null);
             default -> new UnknownVarItem(null);
         };
     }

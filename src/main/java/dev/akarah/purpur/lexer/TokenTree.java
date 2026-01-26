@@ -80,6 +80,12 @@ public interface TokenTree {
             return "gamevalue";
         }
     }
+    record ParticleKeyword(SpanData spanData) implements TokenTree {
+        @Override
+        public @NonNull String toString() {
+            return "particle";
+        }
+    }
     record SoundKeyword(SpanData spanData) implements TokenTree {
         @Override
         public @NonNull String toString() {

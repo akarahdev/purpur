@@ -85,6 +85,7 @@ public class Lexer {
                 case "saved" -> new TokenTree.SavedKeyword(this.endSpan(start));
                 case "local" -> new TokenTree.LocalKeyword(this.endSpan(start));
                 case "gamevalue" -> new TokenTree.GameValueKeyword(this.endSpan(start));
+                case "particle" -> new TokenTree.ParticleKeyword(this.endSpan(start));
                 case "param" -> new TokenTree.ParamKeyword(this.endSpan(start));
                 case "plural" -> new TokenTree.PluralKeyword(this.endSpan(start));
                 case "optional" -> new TokenTree.OptionalKeyword(this.endSpan(start));

@@ -294,7 +294,7 @@ public record Invoke(
                 childBlock.statements().forEach(childStatement -> childStatement.buildTemplate(ctx));
                 ctx.codeBlocks().add(new SelectObject("Reset", "", false));
             }
-            if (this.invoking.name().startsWith("Event")) {
+            if (this.invoking.name().startsWith("playerEvent") || this.invoking.name().startsWith("entityEvent") || this.invoking.name().startsWith("gameEvent")) {
                 childBlock.statements().forEach(childStatement -> childStatement.buildTemplate(ctx));
             }
         });

@@ -17,10 +17,7 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.commands.arguments.NbtTagArgument;
 import net.minecraft.core.component.DataComponentPatch;
 import net.minecraft.core.registries.BuiltInRegistries;
-import net.minecraft.nbt.CompoundTag;
-import net.minecraft.nbt.NbtIo;
-import net.minecraft.nbt.NbtOps;
-import net.minecraft.nbt.Tag;
+import net.minecraft.nbt.*;
 import net.minecraft.resources.Identifier;
 import net.minecraft.resources.RegistryOps;
 import net.minecraft.world.item.ItemStack;
@@ -391,6 +388,24 @@ public class Parser {
                         is,
                         itemKeyword.spanData()
                 );
+            }
+            case TokenTree.ParticleKeyword particleKeyword -> {
+                var parens = parseValues();
+                if(parens.isEmpty()) {
+                    this.errors.add(new SpannedException(
+                            "A particle constructor must have a particle data object as the argument.",
+                            particleKeyword.spanData()
+                    ));
+                    yield null;
+                }
+                if(parens.getFirst() instanceof NbtLiteral(Tag nbtCompound, SpanData spanData)) {
+                    yield ParticleLiteral.fromNbt(nbtCompound, spanData);
+                }
+                this.errors.add(new SpannedException(
+                        "A particle constructor must have a NBT particle data object as the argument.",
+                        particleKeyword.spanData()
+                ));
+                yield null;
             }
             case TokenTree.ParamKeyword paramKeyword -> {
                 var paramName = expect(TokenTree.Identifier.class);
