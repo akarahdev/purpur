@@ -3,8 +3,8 @@ package dev.akarah.purpur.decompiler;
 import com.google.common.collect.Lists;
 import dev.akarah.purpur.mappings.MappingsRepository;
 import dev.akarah.purpur.parser.ast.Block;
-import dev.akarah.purpur.parser.ast.Invoke;
-import dev.akarah.purpur.parser.ast.Value;
+import dev.akarah.purpur.parser.ast.stmt.Invoke;
+import dev.akarah.purpur.parser.ast.value.Variable;
 import dev.dfonline.flint.actiondump.codeblocks.ActionType;
 import dev.dfonline.flint.templates.CodeBlock;
 import dev.dfonline.flint.templates.codeblock.*;
@@ -34,7 +34,7 @@ public class CodeBlockDecompiler {
         switch (codeBlock) {
             case Function function -> {
                 return new Invoke(
-                        new Value.Variable("func." + function.getFunctionName(), "line", null),
+                        new Variable("func." + function.getFunctionName(), "line", null),
                         Optional.empty(),
                         function.getArguments().getOrderedList()
                                 .stream()
@@ -45,7 +45,7 @@ public class CodeBlockDecompiler {
             }
             case Process process -> {
                 return new Invoke(
-                        new Value.Variable("proc." + process.getProcessName(), "line", null),
+                        new Variable("proc." + process.getProcessName(), "line", null),
                         Optional.empty(),
                         process.getArguments().getOrderedList()
                                 .stream()
@@ -56,7 +56,7 @@ public class CodeBlockDecompiler {
             }
             case CallFunction callFunction -> {
                 return new Invoke(
-                        new Value.Variable("func." + callFunction.getData(), "line", null),
+                        new Variable("func." + callFunction.getData(), "line", null),
                         Optional.empty(),
                         callFunction.getArguments().getOrderedList()
                                 .stream()
@@ -67,7 +67,7 @@ public class CodeBlockDecompiler {
             }
             case StartProcess startProcess -> {
                 return new Invoke(
-                        new Value.Variable("proc." + startProcess.getData(), "line", null),
+                        new Variable("proc." + startProcess.getData(), "line", null),
                         Optional.empty(),
                         startProcess.getArguments().getOrderedList()
                                 .stream()
@@ -80,7 +80,7 @@ public class CodeBlockDecompiler {
                 var dfName = new MappingsRepository.DfFunction("PLAYER EVENT", playerEvent.getAction());
                 var scriptName = MappingsRepository.get().getScriptFunction(dfName);
                 return new Invoke(
-                        new Value.Variable(scriptName.name(), "line", null),
+                        new Variable(scriptName.name(), "line", null),
                         Optional.empty(),
                         List.of(),
                         Optional.empty()
@@ -90,7 +90,7 @@ public class CodeBlockDecompiler {
                 var dfName = new MappingsRepository.DfFunction("ENTITY EVENT", entityEvent.getAction());
                 var scriptName = MappingsRepository.get().getScriptFunction(dfName);
                 return new Invoke(
-                        new Value.Variable(scriptName.name(), "line", null),
+                        new Variable(scriptName.name(), "line", null),
                         Optional.empty(),
                         List.of(),
                         Optional.empty()
@@ -120,9 +120,9 @@ public class CodeBlockDecompiler {
                 }
                 var scriptName = MappingsRepository.get().getScriptFunction(dfName);
                 return new Invoke(
-                        new Value.Variable(scriptName.name(), "line", null),
+                        new Variable(scriptName.name(), "line", null),
                         Optional.ofNullable(dfSubAction)
-                                .map(dfActionType -> new Value.Variable(subActionFunction.name(), "line", null)),
+                                .map(dfActionType -> new Variable(subActionFunction.name(), "line", null)),
                         action.getArguments().getOrderedList()
                                 .stream()
                                 .map(VarItemDecompiler::decompile)
@@ -134,7 +134,7 @@ public class CodeBlockDecompiler {
                 var dfName = new MappingsRepository.DfFunction(MappingsRepository.idToFancyName(action.getBlock()), action.getAction());
                 var scriptName = MappingsRepository.get().getScriptFunction(dfName);
                 return new Invoke(
-                        new Value.Variable(scriptName.name(), "line", null),
+                        new Variable(scriptName.name(), "line", null),
                         Optional.empty(),
                         action.getArguments().getOrderedList()
                                 .stream()
@@ -145,7 +145,7 @@ public class CodeBlockDecompiler {
             }
             case Else elseBlock -> {
                 return new Invoke(
-                        new Value.Variable("else", "line", null),
+                        new Variable("else", "line", null),
                         Optional.empty(),
                         List.of(),
                         Optional.empty()
@@ -153,7 +153,7 @@ public class CodeBlockDecompiler {
             }
             default -> {
                 return new Invoke(
-                        new Value.Variable("?", "line", null),
+                        new Variable("?", "line", null),
                         Optional.empty(),
                         List.of(),
                         Optional.empty()

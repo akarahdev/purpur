@@ -1,16 +1,19 @@
-package dev.akarah.purpur.parser.ast;
+package dev.akarah.purpur.parser.ast.stmt;
 
 import com.google.common.collect.Lists;
 import dev.akarah.purpur.mappings.MappingsRepository;
 import dev.akarah.purpur.misc.SpanData;
 import dev.akarah.purpur.misc.SpannedException;
 import dev.akarah.purpur.parser.CodegenContext;
+import dev.akarah.purpur.parser.ast.Block;
+import dev.akarah.purpur.parser.ast.value.TagLiteral;
+import dev.akarah.purpur.parser.ast.value.Value;
+import dev.akarah.purpur.parser.ast.value.Variable;
 import dev.dfonline.flint.actiondump.codeblocks.ActionType;
 import dev.dfonline.flint.templates.Arguments;
 import dev.dfonline.flint.templates.argument.TagArgument;
 import dev.dfonline.flint.templates.codeblock.*;
 import dev.dfonline.flint.templates.codeblock.Process;
-import dev.dfonline.flint.templates.codeblock.abstracts.CodeBlockSubAction;
 import dev.dfonline.flint.templates.codeblock.target.EntityTarget;
 import dev.dfonline.flint.templates.codeblock.target.PlayerTarget;
 
@@ -18,13 +21,13 @@ import java.util.List;
 import java.util.Optional;
 
 public record Invoke(
-        Value.Variable invoking,
-        Optional<Value.Variable> subInvoking,
+        Variable invoking,
+        Optional<Variable> subInvoking,
         List<Value> arguments,
         Optional<Block> childBlock
 ) implements Statement {
-    public dev.akarah.purpur.parser.ast.Invoke withChildBlock(Block block) {
-        return new dev.akarah.purpur.parser.ast.Invoke(invoking, subInvoking, arguments, Optional.of(block));
+    public Invoke withChildBlock(Block block) {
+        return new Invoke(invoking, subInvoking, arguments, Optional.of(block));
     }
 
     @Override
@@ -121,7 +124,7 @@ public record Invoke(
             if(arg == null) {
                 continue;
             }
-            if (arg instanceof Value.TagLiteral(String tag, String option, SpanData spanData)) {
+            if (arg instanceof TagLiteral(String tag, String option, SpanData spanData)) {
                 var dfTag = MappingsRepository.get().getDfTag(new MappingsRepository.ScriptBlockTag(tag, option));
                 if (dfTag == null) {
                     ctx.errors().add(new SpannedException(

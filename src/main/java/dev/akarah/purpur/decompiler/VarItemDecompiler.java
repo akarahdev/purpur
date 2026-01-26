@@ -1,32 +1,32 @@
 package dev.akarah.purpur.decompiler;
 
 import dev.akarah.purpur.mappings.MappingsRepository;
-import dev.akarah.purpur.parser.ast.Value;
+import dev.akarah.purpur.parser.ast.value.Value;
+import dev.akarah.purpur.parser.ast.value.*;
+import dev.akarah.purpur.parser.ast.value.Number;
 import dev.dfonline.flint.templates.argument.*;
 import dev.dfonline.flint.templates.argument.abstracts.Argument;
-
-import java.util.Map;
 
 public class VarItemDecompiler {
     public static Value decompile(Argument argument) {
         return switch (argument) {
             case NumberArgument numberArgument ->
-                    new Value.Number(numberArgument.getNumber(), null);
+                    new Number(numberArgument.getNumber(), null);
             case VariableArgument variableArgument ->
-                    new Value.Variable(variableArgument.getName(), variableArgument.getScope().internalName, null);
+                    new Variable(variableArgument.getName(), variableArgument.getScope().internalName, null);
             case StringArgument stringArgument ->
-                    new Value.StringLiteral(stringArgument.getValue().replace("\\", "\\\\"), null);
+                    new StringLiteral(stringArgument.getValue().replace("\\", "\\\\"), null);
             case TextArgument textArgument ->
-                    new Value.ComponentLiteral(textArgument.getValue().replace("\\", "\\\\"), null);
+                    new ComponentLiteral(textArgument.getValue().replace("\\", "\\\\"), null);
             case VectorArgument vectorArgument ->
-                    new Value.VecLiteral(
+                    new VecLiteral(
                             vectorArgument.getX(),
                             vectorArgument.getY(),
                             vectorArgument.getZ(),
                             null
                     );
             case LocationArgument locationArgument ->
-                    new Value.LocationLiteral(
+                    new LocationLiteral(
                             locationArgument.getX(),
                             locationArgument.getY(),
                             locationArgument.getZ(),
@@ -34,7 +34,7 @@ public class VarItemDecompiler {
                             locationArgument.getYaw(),
                             null
                     );
-            case ParameterArgument parameterArgument -> new Value.ParameterLiteral(
+            case ParameterArgument parameterArgument -> new ParameterLiteral(
                     parameterArgument.getName(),
                     MappingsRepository.dfTypeToScriptType(parameterArgument.getType().name).orElse("any"),
                     parameterArgument.isPlural(),
@@ -44,26 +44,26 @@ public class VarItemDecompiler {
             );
             case TagArgument tagArgument -> {
                 var tag = MappingsRepository.get().getScriptTag(new MappingsRepository.DfBlockTag(tagArgument.getTag(), tagArgument.getOption()));
-                yield new Value.TagLiteral(tag.tag(), tag.option(), null);
+                yield new TagLiteral(tag.tag(), tag.option(), null);
             }
             case GameValueArgument gameValueArgument -> {
                 System.out.println(new MappingsRepository.DfGameValue(gameValueArgument.getType(),  gameValueArgument.getTarget().name()));
                 System.out.println(MappingsRepository.get().getScriptGameValue(new MappingsRepository.DfGameValue(gameValueArgument.getType(),  gameValueArgument.getTarget().name())));
                 var tag = MappingsRepository.get().getScriptGameValue(new MappingsRepository.DfGameValue(gameValueArgument.getType(),  gameValueArgument.getTarget().name()));
-                yield new Value.GameValue(tag.option(), tag.target(), null);
+                yield new GameValue(tag.option(), tag.target(), null);
             }
-            case ItemArgument itemArgument -> new Value.ItemStackVarItem(itemArgument.getItem(), null);
-            case HintArgument hintArgument -> new Value.HintVarItem(null);
+            case ItemArgument itemArgument -> new ItemStackVarItem(itemArgument.getItem(), null);
+            case HintArgument hintArgument -> new HintVarItem(null);
             case SoundArgument soundArgument -> {
                 var dfSound = new MappingsRepository.DfSound(soundArgument.getSound(), soundArgument.getVariant());
-                yield new Value.SoundLiteral(
+                yield new SoundLiteral(
                         MappingsRepository.get().getScriptSound(dfSound).id(),
                         soundArgument.getVolume(),
                         soundArgument.getPitch(),
                         null
                 );
             }
-            default -> new Value.UnknownVarItem(null);
+            default -> new UnknownVarItem(null);
         };
     }
 }

@@ -6,13 +6,11 @@ import com.mojang.brigadier.exceptions.CommandSyntaxException;
 import dev.akarah.purpur.misc.ParseResult;
 import dev.akarah.purpur.misc.SpanData;
 import dev.akarah.purpur.misc.SpannedException;
-import dev.akarah.purpur.parser.ast.Value;
+import dev.akarah.purpur.parser.ast.value.Variable;
 import org.jspecify.annotations.Nullable;
 
 import java.util.List;
-import java.util.Optional;
 import java.util.function.BiFunction;
-import java.util.function.Function;
 import java.util.function.Predicate;
 
 public class Lexer {
@@ -72,10 +70,10 @@ public class Lexer {
             stringReader.skip();
             return new TokenTree.Identifier(sb.toString(), this.endSpan(start));
         }
-        if(Value.Variable.charIsAllowedInIdentifier(stringReader.peek())) {
+        if(Variable.charIsAllowedInIdentifier(stringReader.peek())) {
             var start = this.stringReader.getCursor();
             var sb = new StringBuilder();
-            while(this.stringReader.canRead() && Value.Variable.charIsAllowedInIdentifier(stringReader.peek())) {
+            while(this.stringReader.canRead() && Variable.charIsAllowedInIdentifier(stringReader.peek())) {
                 sb.append(stringReader.read());
             }
             return switch (sb.toString()) {

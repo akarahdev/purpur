@@ -7,13 +7,13 @@ import dev.akarah.purpur.misc.ParseResult;
 import dev.akarah.purpur.misc.SpanData;
 import dev.akarah.purpur.misc.SpannedException;
 import dev.akarah.purpur.parser.ast.Block;
-import dev.akarah.purpur.parser.ast.Invoke;
+import dev.akarah.purpur.parser.ast.stmt.Invoke;
 import dev.akarah.purpur.parser.ast.Program;
-import dev.akarah.purpur.parser.ast.Value;
+import dev.akarah.purpur.parser.ast.value.*;
+import dev.akarah.purpur.parser.ast.value.Number;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.resources.Identifier;
 import net.minecraft.world.item.ItemStack;
-import net.minecraft.world.item.Items;
 import org.jspecify.annotations.Nullable;
 
 import java.util.List;
@@ -87,7 +87,7 @@ public class Parser {
         try {
             var ident = expect(TokenTree.Identifier.class);
 
-            var subAction = Optional.<Value.Variable>empty();
+            var subAction = Optional.<Variable>empty();
             if(peek() instanceof TokenTree.Brackets) {
                 var subActionTokens = expect(TokenTree.Brackets.class);
 
@@ -98,7 +98,7 @@ public class Parser {
                     ));
                 }
                 if(subActionTokens.children().getFirst() instanceof TokenTree.Identifier(String name, SpanData spanData)) {
-                    subAction = Optional.of(new Value.Variable(name, "line", spanData));
+                    subAction = Optional.of(new Variable(name, "line", spanData));
                 } else {
                     this.errors.add(new SpannedException(
                             "Sub-action blocks must have a valid action in it's place",
@@ -116,7 +116,7 @@ public class Parser {
             }
 
             return new Invoke(
-                    new Value.Variable(ident.name(), "line", ident.spanData()),
+                    new Variable(ident.name(), "line", ident.spanData()),
                     subAction,
                     args,
                     block
@@ -158,21 +158,21 @@ public class Parser {
 
     public Value parseValue() {
         return switch (read()) {
-            case TokenTree.Identifier identifier -> new Value.Variable(identifier.name(), "line", identifier.spanData());
-            case TokenTree.Number number -> new Value.Number(number.value(), number.spanData());
-            case TokenTree.StringLiteral stringLiteral -> new Value.StringLiteral(stringLiteral.value(), stringLiteral.spanData());
-            case TokenTree.ComponentLiteral componentLiteral -> new Value.ComponentLiteral(componentLiteral.value(), componentLiteral.spanData());
+            case TokenTree.Identifier identifier -> new Variable(identifier.name(), "line", identifier.spanData());
+            case TokenTree.Number number -> new Number(number.value(), number.spanData());
+            case TokenTree.StringLiteral stringLiteral -> new StringLiteral(stringLiteral.value(), stringLiteral.spanData());
+            case TokenTree.ComponentLiteral componentLiteral -> new ComponentLiteral(componentLiteral.value(), componentLiteral.spanData());
             case TokenTree.LocalKeyword localKeyword -> {
                 var name = expect(TokenTree.Identifier.class);
-                yield new Value.Variable(name.name(), "local", name.spanData());
+                yield new Variable(name.name(), "local", name.spanData());
             }
             case TokenTree.GameKeyword gameKeyword -> {
                 var name = expect(TokenTree.Identifier.class);
-                yield new Value.Variable(name.name(), "game", name.spanData());
+                yield new Variable(name.name(), "game", name.spanData());
             }
             case TokenTree.SavedKeyword savedKeyword -> {
                 var name = expect(TokenTree.Identifier.class);
-                yield new Value.Variable(name.name(), "saved", name.spanData());
+                yield new Variable(name.name(), "saved", name.spanData());
             }
             case TokenTree.TagKeyword tagKeyword -> {
                 var ident = expect(TokenTree.Identifier.class);
@@ -184,7 +184,7 @@ public class Parser {
                     ));
                     yield null;
                 }
-                yield new Value.TagLiteral(split[0], split[1], ident.spanData());
+                yield new TagLiteral(split[0], split[1], ident.spanData());
             }
             case TokenTree.GameValueKeyword gameValueKeyword -> {
                 var ident = expect(TokenTree.Identifier.class);
@@ -196,7 +196,7 @@ public class Parser {
                     ));
                     yield null;
                 }
-                yield new Value.GameValue(split[0], split[1], ident.spanData());
+                yield new GameValue(split[0], split[1], ident.spanData());
             }
             case TokenTree.LocKeyword locKeyword -> {
                 var args = parseValues();
@@ -208,19 +208,19 @@ public class Parser {
                     yield null;
                 }
                 for(var arg : args) {
-                    if(!(arg instanceof Value.Number)) {
+                    if(!(arg instanceof Number)) {
                         this.errors.add(new SpannedException(
                                 "Location constructor arguments must be numbers",
                                 arg.spanData()
                         ));
                     }
                 }
-                yield new Value.LocationLiteral(
-                        Double.parseDouble(((Value.Number) args.get(0)).literal()),
-                        Double.parseDouble(((Value.Number) args.get(1)).literal()),
-                        Double.parseDouble(((Value.Number) args.get(2)).literal()),
-                        Double.parseDouble(((Value.Number) args.get(3)).literal()),
-                        Double.parseDouble(((Value.Number) args.get(4)).literal()),
+                yield new LocationLiteral(
+                        Double.parseDouble(((Number) args.get(0)).literal()),
+                        Double.parseDouble(((Number) args.get(1)).literal()),
+                        Double.parseDouble(((Number) args.get(2)).literal()),
+                        Double.parseDouble(((Number) args.get(3)).literal()),
+                        Double.parseDouble(((Number) args.get(4)).literal()),
                         locKeyword.spanData()
                 );
             }
@@ -234,17 +234,17 @@ public class Parser {
                     yield null;
                 }
                 for(var arg : args) {
-                    if(!(arg instanceof Value.Number)) {
+                    if(!(arg instanceof Number)) {
                         this.errors.add(new SpannedException(
                                 "Location constructor arguments must be numbers",
                                 arg.spanData()
                         ));
                     }
                 }
-                yield new Value.VecLiteral(
-                        Double.parseDouble(((Value.Number) args.get(0)).literal()),
-                        Double.parseDouble(((Value.Number) args.get(1)).literal()),
-                        Double.parseDouble(((Value.Number) args.get(2)).literal()),
+                yield new VecLiteral(
+                        Double.parseDouble(((Number) args.get(0)).literal()),
+                        Double.parseDouble(((Number) args.get(1)).literal()),
+                        Double.parseDouble(((Number) args.get(2)).literal()),
                         vecKeyword.spanData()
                 );
             }
@@ -259,12 +259,12 @@ public class Parser {
                 }
 
                 var arg1 = args.get(0);
-                if(arg1 instanceof Value.Variable variable) {
+                if(arg1 instanceof Variable variable) {
                     var arg2 = args.get(1);
-                    if(arg2 instanceof Value.Number volume) {
+                    if(arg2 instanceof Number volume) {
                         var arg3 = args.get(2);
-                        if(arg3 instanceof Value.Number pitch) {
-                            yield new Value.SoundLiteral(
+                        if(arg3 instanceof Number pitch) {
+                            yield new SoundLiteral(
                                     variable.name(),
                                     Double.parseDouble(volume.literal()),
                                     Double.parseDouble(pitch.literal()),
@@ -309,7 +309,7 @@ public class Parser {
                 var id = Identifier.fromNamespaceAndPath("minecraft", "air");
                 if(!args.isEmpty()) {
                     var val = args.getFirst();
-                    if(val instanceof Value.Variable variable) {
+                    if(val instanceof Variable variable) {
                         id = Identifier.parse(variable.name());
                         if(BuiltInRegistries.ITEM.getOptional(id).isEmpty()) {
                             this.errors.add(new SpannedException(
@@ -328,7 +328,7 @@ public class Parser {
                 var count = 1;
                 if(args.size() >= 2) {
                     var val = args.get(1);
-                    if(val instanceof Value.Number number) {
+                    if(val instanceof Number number) {
                         count = (int) Double.parseDouble(number.literal());
                         if(count > 99) {
                             this.errors.add(new SpannedException(
@@ -351,7 +351,7 @@ public class Parser {
                 }
                 var is = new ItemStack(BuiltInRegistries.ITEM.getValue(id));
                 is.setCount(count);
-                yield new Value.ItemStackVarItem(
+                yield new ItemStackVarItem(
                         is,
                         itemKeyword.spanData()
                 );
@@ -389,10 +389,10 @@ public class Parser {
                             type + " is not a valid parameter type",
                             paramTypeTokens.spanData()
                     ));
-                    yield new Value.Number("0", paramTypeTokens.spanData());
+                    yield new Number("0", paramTypeTokens.spanData());
                 }
 
-                yield new Value.ParameterLiteral(
+                yield new ParameterLiteral(
                         paramName.name(),
                         newType.orElseThrow(),
                         plural,
