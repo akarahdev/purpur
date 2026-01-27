@@ -3,7 +3,6 @@ package dev.akarah.purpur.editor.screen;
 import com.google.common.collect.Lists;
 import com.mojang.blaze3d.platform.cursor.CursorTypes;
 import dev.akarah.purpur.lexer.Lexer;
-import dev.akarah.purpur.misc.SpannedException;
 import dev.akarah.purpur.parser.Parser;
 import dev.akarah.purpur.parser.ast.AST;
 import net.minecraft.client.gui.GuiGraphics;
@@ -16,14 +15,11 @@ import net.minecraft.resources.Identifier;
 import net.minecraft.util.ARGB;
 import org.jspecify.annotations.NonNull;
 
-import java.io.PrintWriter;
-import java.io.StringWriter;
 import java.util.List;
 import java.util.Objects;
 import java.util.regex.Pattern;
 
 public class EditorBox extends MultiLineEditBox {
-    List<SpannedException> spannedExceptions = Lists.newArrayList();
     TextEditorScreen screen;
     boolean dirty;
 
@@ -118,11 +114,10 @@ public class EditorBox extends MultiLineEditBox {
     public static FontDescription OUR_FONT = new FontDescription.Resource(Identifier.fromNamespaceAndPath("minecraft", "default"));
 
     protected void renderHighlightedLine(String currentLineText, int lineStartX, int currentLineY, @NonNull GuiGraphics guiGraphics, int lineStartIndex, int lineEndIndex, int lineNo) {
-
         var lineNumberText = Component.literal(String.valueOf(lineNo)).withStyle(style -> style.withFont(OUR_FONT));
         guiGraphics.drawString(this.font, lineNumberText, this.getRight() - this.font.width(lineNumberText) - 2, currentLineY + 1, ARGB.color(100, 255, 255, 255), this.textShadow);
 
-        for(var exception : this.spannedExceptions) {
+        for(var exception : this.screen.spannedExceptions) {
             if(exception.spanData().line() == lineNo) {
                 guiGraphics.fill(lineStartX, currentLineY, this.getRight(), currentLineY + 9, ARGB.color(15, 255, 0, 0));
             }
@@ -149,7 +144,7 @@ public class EditorBox extends MultiLineEditBox {
         }
 
         try {
-            for(var exception : this.spannedExceptions) {
+            for(var exception : this.screen.spannedExceptions) {
                 var start = exception.spanData().start();
                 var end = exception.spanData().end();
                 if(start >= lineStartIndex && end <= lineEndIndex) {
@@ -184,6 +179,7 @@ public class EditorBox extends MultiLineEditBox {
         int currentLineY = this.getInnerTop();
         boolean cursorRendered = false;
 
+        // draw all the highlighted text in the box
         int lineNo = 0;
         for(var currentLineView : this.textField.iterateLines()) {
             lineNo += 1;
@@ -192,8 +188,10 @@ public class EditorBox extends MultiLineEditBox {
 
             var currentLineText = textBuffer.substring(currentLineView.beginIndex(), currentLineView.endIndex());
             if(textLineIsWithinArea) {
+                // draw cursor logic
                 if (shouldRenderBlinkingCursor && cursorWithinText && cursorIndex >= currentLineView.beginIndex() && cursorIndex <= currentLineView.endIndex()) {
                     var textBeforeCursor = textBuffer.substring(currentLineView.beginIndex(), cursorIndex);
+                    // draw line with highlighting and cursor
                     this.renderHighlightedLine(currentLineText, lineStartX, currentLineY, guiGraphics, currentLineView.beginIndex(), currentLineView.endIndex(), lineNo);
                     cursorPixelX = lineStartX + this.font.width(Component.literal(textBeforeCursor).withStyle(s -> s.withFont(OUR_FONT)));
                     if (!cursorRendered) {
@@ -203,10 +201,12 @@ public class EditorBox extends MultiLineEditBox {
                         guiGraphics.fill(cursorPixelX, caretTopY, caretRightX, caretBottomY + 9, this.cursorColor);
                         cursorRendered = true;
                     }
+
+                    drawAutoCompleteSuggestion(guiGraphics, cursorPixelX, currentLineY + 9);
                 } else {
-                    var lineToRender = currentLineText;
-                    this.renderHighlightedLine(lineToRender, lineStartX, currentLineY, guiGraphics, currentLineView.beginIndex(), currentLineView.endIndex(), lineNo);
-                    cursorPixelX = lineStartX + this.font.width(Component.literal(lineToRender).withStyle(s -> s.withFont(OUR_FONT))) - 1;
+                    // draw line with highlighting, but no cursor
+                    this.renderHighlightedLine(currentLineText, lineStartX, currentLineY, guiGraphics, currentLineView.beginIndex(), currentLineView.endIndex(), lineNo);
+                    cursorPixelX = lineStartX + this.font.width(Component.literal(currentLineText).withStyle(s -> s.withFont(OUR_FONT))) - 1;
                 }
             }
             lastLineY = currentLineY;
@@ -216,15 +216,19 @@ public class EditorBox extends MultiLineEditBox {
             currentLineY += 9;
         }
 
+        // draw the cursor at the end of the text
         if (shouldRenderBlinkingCursor && !cursorWithinText) {
             if (this.withinContentAreaTopBottom(lastLineY, lastLineY + 9)) {
                 int caretTopY = currentLineY - 10;
                 int caretRightX = cursorPixelX + 1;
                 int caretBottomY = currentLineY + 1;
                 guiGraphics.fill(cursorPixelX, caretTopY, caretRightX, caretBottomY, this.cursorColor);
+
+                drawAutoCompleteSuggestion(guiGraphics, cursorPixelX, currentLineY);
             }
         }
 
+        // draw the selection highlighter
         if (this.textField.hasSelection()) {
             var selectedTextView = this.textField.getSelected();
             int selectionStartX = this.getInnerLeft();
@@ -263,12 +267,45 @@ public class EditorBox extends MultiLineEditBox {
         if (this.isHovered()) {
             guiGraphics.requestCursor(CursorTypes.IBEAM);
         }
+
+        for(var task : postDrawTasks) {
+            task.run();
+        }
+        postDrawTasks.clear();
+        this.screen.reloadSideText();
+    }
+
+    List<Runnable> postDrawTasks = Lists.newArrayList();
+
+    private void drawAutoCompleteSuggestion(@NonNull GuiGraphics guiGraphics, int cursorPixelX, int currentLineY) {
+        if(this.screen.suggestions.isEmpty()) return;
+
+        postDrawTasks.add(() -> {
+            guiGraphics.fill(
+                    cursorPixelX, currentLineY + 9,
+                    cursorPixelX + 300, currentLineY + (11 * this.screen.suggestions.size()),
+                    ARGB.color(133, 50, 50, 50)
+            );
+
+            int idx = 0;
+            for(var suggestion : this.screen.suggestions) {
+                guiGraphics.drawString(
+                        Minecraft.getInstance().font,
+                        suggestion,
+                        cursorPixelX,
+                        currentLineY + (idx * 9),
+                        ARGB.color(255, 255, 255, 255)
+                );
+                idx += 1;
+            }
+        });
     }
 
     public void tryCompile() {
-        this.screen.exceptions.setMessage(Component.empty());
+        this.screen.sideText.setMessage(Component.empty());
+        this.screen.activeException = null;
         try {
-            this.spannedExceptions.clear();
+            this.screen.spannedExceptions.clear();
 
             var text = this.textField.value()
                     .replace("\\n", "\n");
@@ -287,30 +324,15 @@ public class EditorBox extends MultiLineEditBox {
                     Minecraft.getInstance().player.getInventory().setSelectedItem(template);
                 }
             } else {
-                this.spannedExceptions.addAll(templates.errors());
+                this.screen.spannedExceptions.addAll(templates.errors());
                 System.out.println(templates.errors());
             }
         } catch (Exception e) {
-            var sw = new StringWriter();
-            var pw = new PrintWriter(sw);
-            e.printStackTrace(pw);
-            this.screen.exceptions.setMessage(
-                    Component.literal(sw.toString())
-                            .withColor(ARGB.color(255, 255, 50, 50))
-            );
-        }
-
-        for(var exception : this.spannedExceptions) {
-            this.screen.exceptions.setMessage(
-                    this.screen.exceptions.getMessage()
-                            .copy()
-                            .append("\n\n")
-                            .append(exception.getMessage())
-                            .append("\n")
-                            .append("Line " + exception.spanData().line())
-            );
+            this.screen.activeException = e;
         }
     }
+
+
 
     @Override
     protected double scrollRate() {

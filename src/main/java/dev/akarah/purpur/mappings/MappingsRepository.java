@@ -8,7 +8,9 @@ import org.apache.commons.text.CaseUtils;
 import org.jspecify.annotations.NonNull;
 import org.jspecify.annotations.Nullable;
 
+import java.awt.*;
 import java.util.*;
+import java.util.List;
 import java.util.stream.Collectors;
 
 public class MappingsRepository {
@@ -374,4 +376,18 @@ public class MappingsRepository {
     public DfSound getDfSound(ScriptSound scriptSound) {
         return this.scriptSoundToDf.get(scriptSound);
     }
+
+    public Set<String> allScriptFunctions() {
+        return this.scriptToActionType.keySet();
+    }
+
+    public Set<String> allScriptSounds() {
+        return this.scriptSoundToDf.keySet().stream().map(ScriptSound::id).collect(Collectors.toSet());
+    }
+
+    public Set<String> allScriptGameValues() {
+        return this.scriptGameValueToDf.keySet().stream().map(ScriptGameValue::toString).collect(Collectors.toSet());
+    }
+
+
 }
