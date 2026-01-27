@@ -55,10 +55,14 @@ public class Lexer {
             return new TokenTree.Number(sb.toString(), this.endSpan(start));
         }
 
-        if(stringReader.peek() == 'n' && stringReader.peek(1) == '\"') {
-            var start = this.stringReader.getCursor();
-            expect('n');
-            return new TokenTree.Number(parseStringLiteral(), this.endSpan(start));
+        try {
+            if(stringReader.peek() == 'n' && stringReader.peek(1) == '\"') {
+                var start = this.stringReader.getCursor();
+                expect('n');
+                return new TokenTree.Number(parseStringLiteral(), this.endSpan(start));
+            }
+        } catch (Exception ignored) {
+
         }
         if(stringReader.peek() == '`') {
             var start = this.stringReader.getCursor();
