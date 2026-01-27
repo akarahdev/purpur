@@ -243,7 +243,10 @@ public class EditorBox extends MultiLineEditBox {
         try {
             this.spannedExceptions.clear();
 
-            var templates = Lexer.parse(this.textField.value())
+            var text = this.textField.value()
+                    .replace("\\n", "\n");
+
+            var templates = Lexer.parse(text)
                     .flatMap(Parser::parse)
                     .flatMap(AST::buildTemplates);
 

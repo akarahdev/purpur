@@ -4,9 +4,12 @@ import com.google.common.collect.Lists;
 import dev.akarah.purpur.mappings.MappingsRepository;
 import dev.akarah.purpur.parser.ast.Block;
 import dev.akarah.purpur.parser.ast.stmt.Invoke;
+import dev.akarah.purpur.parser.ast.value.TagLiteral;
 import dev.akarah.purpur.parser.ast.value.Variable;
 import dev.dfonline.flint.actiondump.codeblocks.ActionType;
+import dev.dfonline.flint.actiondump.codeblocks.BlockTagType;
 import dev.dfonline.flint.templates.CodeBlock;
+import dev.dfonline.flint.templates.argument.TagArgument;
 import dev.dfonline.flint.templates.codeblock.*;
 import dev.dfonline.flint.templates.codeblock.Process;
 import dev.dfonline.flint.templates.codeblock.abstracts.CodeBlockAction;
@@ -107,51 +110,10 @@ public class CodeBlockDecompiler {
                 );
             }
             case CodeBlockSubAction action -> {
-                var dfName = new MappingsRepository.DfFunction(MappingsRepository.idToFancyName(action.getBlock()), action.getAction());
-                ActionType dfSubAction = null;
-                for(var subActionBlock : MappingsRepository.get().dfSubActionsToActionTypeMap().entrySet()) {
-                    if(subActionBlock.getKey().equals(action.getSubAction())) {
-                        dfSubAction = subActionBlock.getValue();
-                    }
-                }
-                for(var subActionBlock : MappingsRepository.get().allActionTypes()) {
-                    if(subActionBlock.name().equals(action.getSubAction())) {
-                        dfSubAction = subActionBlock;
-                    }
-                }
-                System.out.println(dfSubAction);
-                MappingsRepository.ScriptFunction subActionFunction;
-                if(dfSubAction != null) {
-                    subActionFunction = MappingsRepository.get().getScriptFunction(new MappingsRepository.DfFunction(
-                            dfSubAction.codeblockName(), dfSubAction.name()
-                    ));
-                } else {
-                    subActionFunction = null;
-                }
-                var scriptName = MappingsRepository.get().getScriptFunction(dfName);
-                return new Invoke(
-                        new Variable(scriptName.name(), "line", null),
-                        Optional.ofNullable(dfSubAction)
-                                .map(dfActionType -> new Variable(subActionFunction.name(), "line", null)),
-                        action.getArguments().getOrderedList()
-                                .stream()
-                                .map(VarItemDecompiler::decompile)
-                                .toList(),
-                        Optional.empty()
-                );
+                return decompileSubAction(action);
             }
             case CodeBlockAction action -> {
-                var dfName = new MappingsRepository.DfFunction(MappingsRepository.idToFancyName(action.getBlock()), action.getAction());
-                var scriptName = MappingsRepository.get().getScriptFunction(dfName);
-                return new Invoke(
-                        new Variable(scriptName.name(), "line", null),
-                        Optional.empty(),
-                        action.getArguments().getOrderedList()
-                                .stream()
-                                .map(VarItemDecompiler::decompile)
-                                .toList(),
-                        Optional.empty()
-                );
+                return decompileAction(action);
             }
             case Else elseBlock -> {
                 return new Invoke(
@@ -170,5 +132,77 @@ public class CodeBlockDecompiler {
                 );
             }
         }
+    }
+
+    private static MappingsRepository.DfFunction createDfFunction(CodeBlockAction action) {
+        return new MappingsRepository.DfFunction(MappingsRepository.idToFancyName(action.getBlock()), action.getAction());
+    }
+
+    private static List<dev.akarah.purpur.parser.ast.value.Value> mapArguments(CodeBlockAction action) {
+        return action.getArguments().getOrderedList()
+                .stream()
+                .filter(argument -> {
+                    if(!(argument instanceof TagArgument tagArgument)) {
+                        return true;
+                    }
+                    var scriptCodeBlockName = MappingsRepository.get().getScriptFunction(new MappingsRepository.DfFunction(
+                            MappingsRepository.idToFancyName(action.getBlock()),
+                            action.getAction()
+                    ));
+                    for(var tagType : MappingsRepository.get().getActionType(scriptCodeBlockName.name()).tags()) {
+                        System.out.println(tagType.name() + " vs. " + tagArgument.getTag());
+                        System.out.println(tagType.defaultOption() + " vs. " + tagArgument.getOption());
+
+                        if(tagType.name().equals(tagArgument.getTag()) && tagType.defaultOption().equals(tagArgument.getOption())) {
+                            return false;
+                        }
+                    }
+                    return true;
+                })
+                .map(VarItemDecompiler::decompile)
+                .toList();
+    }
+
+    public static Invoke decompileAction(CodeBlockAction action) {
+        var dfName = createDfFunction(action);
+        var scriptName = MappingsRepository.get().getScriptFunction(dfName);
+        return new Invoke(
+                new Variable(scriptName.name(), "line", null),
+                Optional.empty(),
+                mapArguments(action),
+                Optional.empty()
+        );
+    }
+
+    public static Invoke decompileSubAction(CodeBlockSubAction action) {
+        var dfName = createDfFunction(action);
+        ActionType dfSubAction = null;
+        for (var subActionBlock : MappingsRepository.get().dfSubActionsToActionTypeMap().entrySet()) {
+            if (subActionBlock.getKey().equals(action.getSubAction())) {
+                dfSubAction = subActionBlock.getValue();
+            }
+        }
+        for (var subActionBlock : MappingsRepository.get().allActionTypes()) {
+            if (subActionBlock.name().equals(action.getSubAction())) {
+                dfSubAction = subActionBlock;
+            }
+        }
+        System.out.println(dfSubAction);
+        MappingsRepository.ScriptFunction subActionFunction;
+        if (dfSubAction != null) {
+            subActionFunction = MappingsRepository.get().getScriptFunction(new MappingsRepository.DfFunction(
+                    dfSubAction.codeblockName(), dfSubAction.name()
+            ));
+        } else {
+            subActionFunction = null;
+        }
+        var scriptName = MappingsRepository.get().getScriptFunction(dfName);
+        return new Invoke(
+                new Variable(scriptName.name(), "line", null),
+                Optional.ofNullable(dfSubAction)
+                        .map(dfActionType -> new Variable(subActionFunction.name(), "line", null)),
+                mapArguments(action),
+                Optional.empty()
+        );
     }
 }

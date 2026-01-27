@@ -312,6 +312,10 @@ public class MappingsRepository {
         return this.scriptToActionType.get(scriptName);
     }
 
+    public String getScriptName(ActionType actionType) {
+        return this.actionTypeToScript.get(actionType);
+    }
+
     public ScriptBlockTag getScriptTag(DfBlockTag dfTag) {
         return this.dfTagToScript.get(dfTag);
     }

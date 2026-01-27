@@ -15,9 +15,13 @@ public class VarItemDecompiler {
             case VariableArgument variableArgument ->
                     new Variable(variableArgument.getName(), variableArgument.getScope().internalName, null);
             case StringArgument stringArgument ->
-                    new StringLiteral(stringArgument.getValue().replace("\\", "\\\\"), null);
+                    new StringLiteral(stringArgument.getValue()
+                            .replace("\\", "\\\\")
+                            .replace("\n", "\\n"), null);
             case TextArgument textArgument ->
-                    new ComponentLiteral(textArgument.getValue().replace("\\", "\\\\"), null);
+                    new ComponentLiteral(textArgument.getValue()
+                            .replace("\\", "\\\\")
+                            .replace("\n", "\\n"), null);
             case VectorArgument vectorArgument ->
                     new VecLiteral(
                             vectorArgument.getX(),
