@@ -74,8 +74,7 @@ public class Parser {
         var tok = this.tokens.get(this.index);
         this.index += 1;
         if(!clazz.isInstance(tok)) {
-            throw new SpannedException("Expected " + clazz.getName() + ", found " + tok.getClass().getName(),
-                    tok.spanData());
+            throw new SpannedException("Expected " + clazz.getSimpleName() + ", found " + tok.getClass().getSimpleName(), tok.spanData());
         }
         return clazz.cast(tok);
     }
@@ -423,6 +422,9 @@ public class Parser {
                         case TokenTree.PluralKeyword pluralKeyword -> plural = true;
                         case TokenTree.OptionalKeyword optionalKeyword -> optional = true;
                         case TokenTree.Identifier identifier -> type = identifier.name();
+                        case TokenTree.ItemKeyword itemKeyword -> type = "item";
+                        case TokenTree.LocKeyword locKeyword -> type = "loc";
+                        case TokenTree.VecKeyword vecKeyword -> type = "vec";
                         case TokenTree.EndOfStream end -> {}
                         default -> this.errors.add(new SpannedException(
                                 "Invalid parameter modifier " + arg.getClass().getName() + " in parameter type",

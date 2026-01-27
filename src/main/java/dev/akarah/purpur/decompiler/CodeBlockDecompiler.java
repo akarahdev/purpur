@@ -20,12 +20,17 @@ import java.util.Optional;
 
 public class CodeBlockDecompiler {
     public static Invoke decompile(BracketManager.BracketDraft draft) {
+        if(draft.codeBlock instanceof CodeBlockAction action && action.getAction() == null) {
+            return null;
+        }
         var invoke = decompile(draft.codeBlock);
+        if(invoke == null) return null;
 
         if(draft.children != null) {
             var block = new Block(Lists.newArrayList());
             for(var child : draft.children) {
-                block.statements().add(decompile(child));
+                var decomp = decompile(child);
+                block.statements().add(decomp);
             }
             invoke = invoke.withChildBlock(block);
         }
@@ -110,9 +115,15 @@ public class CodeBlockDecompiler {
                 );
             }
             case CodeBlockSubAction action -> {
+                if(action.getAction() == null) {
+                    return null;
+                }
                 return decompileSubAction(action);
             }
             case CodeBlockAction action -> {
+                if(action.getAction() == null) {
+                    return null;
+                }
                 return decompileAction(action);
             }
             case Else elseBlock -> {
@@ -150,8 +161,6 @@ public class CodeBlockDecompiler {
                             action.getAction()
                     ));
                     for(var tagType : MappingsRepository.get().getActionType(scriptCodeBlockName.name()).tags()) {
-                        System.out.println(tagType.name() + " vs. " + tagArgument.getTag());
-                        System.out.println(tagType.defaultOption() + " vs. " + tagArgument.getOption());
 
                         if(tagType.name().equals(tagArgument.getTag()) && tagType.defaultOption().equals(tagArgument.getOption())) {
                             return false;
@@ -164,6 +173,9 @@ public class CodeBlockDecompiler {
     }
 
     public static Invoke decompileAction(CodeBlockAction action) {
+        if(action.getAction() == null) {
+            return null;
+        }
         var dfName = createDfFunction(action);
         var scriptName = MappingsRepository.get().getScriptFunction(dfName);
         return new Invoke(
@@ -175,6 +187,9 @@ public class CodeBlockDecompiler {
     }
 
     public static Invoke decompileSubAction(CodeBlockSubAction action) {
+        if(action.getAction() == null) {
+            return null;
+        }
         var dfName = createDfFunction(action);
         ActionType dfSubAction = null;
         for (var subActionBlock : MappingsRepository.get().dfSubActionsToActionTypeMap().entrySet()) {
@@ -187,7 +202,6 @@ public class CodeBlockDecompiler {
                 dfSubAction = subActionBlock;
             }
         }
-        System.out.println(dfSubAction);
         MappingsRepository.ScriptFunction subActionFunction;
         if (dfSubAction != null) {
             subActionFunction = MappingsRepository.get().getScriptFunction(new MappingsRepository.DfFunction(

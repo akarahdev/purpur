@@ -32,7 +32,12 @@ public record Invoke(
 
     @Override
     public void lowerToParsable(StringBuilder builder, int depth) {
-
+        if(this.invoking == null) {
+            return;
+        }
+        if(this.invoking.name() == null) {
+            return;
+        }
         invoking.lowerToParsable(builder, depth);
 
         subInvoking.ifPresent(subInvoking -> {
@@ -252,7 +257,6 @@ public record Invoke(
             );
             cb.setArguments(arguments);
             if(this.subInvoking.isPresent()) {
-                System.out.println(blockTagActionType);
                 var subAction = MappingsRepository.get().actionTypeToDfSubActionsMap().get(blockTagActionType);
                 if(subAction == null) {
                     ctx.errors().add(new SpannedException(
@@ -272,7 +276,6 @@ public record Invoke(
             );
             cb.setArguments(arguments);
             if(this.subInvoking.isPresent()) {
-                System.out.println(blockTagActionType);
                 cb.setSubAction(
                         MappingsRepository.get().actionTypeToDfSubActionsMap().get(blockTagActionType)
                 );

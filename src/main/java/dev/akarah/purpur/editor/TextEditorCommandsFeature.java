@@ -33,8 +33,12 @@ public class TextEditorCommandsFeature implements CommandFeature {
                     Minecraft.getInstance().schedule(() -> {
                         var is = Minecraft.getInstance().player.getMainHandItem();
                         var encoded = Template.fromItem(is);
+                        assert encoded != null;
                         var decompiled = CodeBlockDecompiler.decompile(BracketManager.makeDraft(encoded));
-
+                        if(decompiled == null) {
+                            ctx.getSource().sendError(Component.literal("Failed to decompile template, the event is null"));
+                            return;
+                        }
                         var sb = new StringBuilder();
                         decompiled.lowerToParsable(sb, 0);
 

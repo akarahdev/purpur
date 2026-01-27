@@ -1,6 +1,7 @@
 package dev.akarah.purpur.mappings;
 
 import com.google.common.collect.Maps;
+import com.google.common.collect.Sets;
 import dev.dfonline.flint.actiondump.ActionDump;
 import dev.dfonline.flint.actiondump.codeblocks.ActionType;
 import org.apache.commons.text.CaseUtils;
@@ -191,6 +192,9 @@ public class MappingsRepository {
         INSTANCE = new MappingsRepository();
         var dump = ActionDump.get();
 
+        var dfActions = Arrays.stream(dump.actions()).map(ActionType::name).collect(Collectors.toSet());
+
+        System.out.println(dfActions);
         for(var action : dump.actions()) {
             // skip legacy actions
             if(action.name().contains("legacy ")) continue;
@@ -206,7 +210,15 @@ public class MappingsRepository {
                     .replace("ifVariable", "ifVars")
                     .replace("selectObject", "select");
 
+
             var scriptActionName = Character.toLowerCase(action.name().trim().charAt(0)) + action.name().trim().substring(1);
+
+
+            if(!action.name().startsWith(" ")
+                    && !action.name().endsWith(" ") && dfActions.contains(" " + action.name() + " ")) {
+                System.out.println("Found legacy action: " + action.name());
+                scriptActionName += "Legacy";
+            }
 
             var a = scriptActionName;
             for(var entry : SCRIPT_NAME_HELPER.entrySet()) {
@@ -278,8 +290,10 @@ public class MappingsRepository {
                 for(var variant : sound.variants()) {
                     var scriptId = new ScriptSound(
                             CaseUtils.toCamelCase(iconName, false, ' ')
+                                        .replaceAll("[()]", "")
                                     + "."
                                     + CaseUtils.toCamelCase(variant.id(), false, ' ', '_')
+                                        .replaceAll("[()]", "")
                     );
                     var dfId = new DfSound(iconName, variant.id());
                     INSTANCE.scriptSoundToDf.put(scriptId, dfId);
@@ -288,14 +302,12 @@ public class MappingsRepository {
             }
             var scriptId = new ScriptSound(
                     CaseUtils.toCamelCase(iconName, false, ' ')
+                            .replaceAll("[()]", "")
             );
             var dfId = new DfSound(iconName, null);
             INSTANCE.scriptSoundToDf.put(scriptId, dfId);
             INSTANCE.dfSoundToScript.put(dfId, scriptId);
         }
-
-        System.out.println(INSTANCE.dfSoundToScript.keySet());
-
     }
 
     public ScriptFunction getScriptFunction(DfFunction dfName) {
