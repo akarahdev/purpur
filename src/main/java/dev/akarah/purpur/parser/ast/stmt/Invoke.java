@@ -130,7 +130,7 @@ public record Invoke(
         }
 
         var arguments = new Arguments();
-        int idx = 0;
+        int idx = 1;
         var tagsWritten = Lists.newArrayList();
         for (var arg : this.arguments) {
             if(arg == null) {
@@ -164,19 +164,19 @@ public record Invoke(
         }
 
         // player blocks
-        if (this.invoking.name().contains("player.")) {
+        if (this.invoking.name().startsWith("player.")) {
             ctx.codeBlocks().add(new PlayerAction(
                     actionType.name(),
                     PlayerTarget.NONE
             ).setArguments(arguments));
         }
-        if (this.invoking.name().contains("playerEvent.")) {
+        if (this.invoking.name().startsWith("playerEvent.")) {
             ctx.codeBlocks().add(new PlayerEvent(
                     actionType.name(),
                     false
             ));
         }
-        if (this.invoking.name().contains("ifPlayer.")) {
+        if (this.invoking.name().startsWith("ifPlayer.")) {
             ctx.codeBlocks().add(new IfPlayer(
                     actionType.name(),
                     PlayerTarget.NONE,
@@ -185,19 +185,19 @@ public record Invoke(
         }
 
         // entity blocks
-        if (this.invoking.name().contains("entity.")) {
+        if (this.invoking.name().startsWith("entity.")) {
             ctx.codeBlocks().add(new EntityAction(
                     EntityTarget.NONE,
                     actionType.name()
             ).setArguments(arguments));
         }
-        if (this.invoking.name().contains("entityEvent.")) {
+        if (this.invoking.name().startsWith("entityEvent.")) {
             ctx.codeBlocks().add(new EntityEvent(
                     actionType.name(),
                     false
             ));
         }
-        if (this.invoking.name().contains("ifEntity.")) {
+        if (this.invoking.name().startsWith("ifEntity.")) {
             ctx.codeBlocks().add(new IfEntity(
                     actionType.name(),
                     EntityTarget.NONE,
@@ -206,16 +206,17 @@ public record Invoke(
         }
 
         // game blocks
-        if (this.invoking.name().contains("ifGame.")) {
+        if (this.invoking.name().startsWith("ifGame.")) {
             ctx.codeBlocks().add(new IfGame(
                     actionType.name(),
                     false
             ).setArguments(arguments));
         }
-        if (this.invoking.name().contains("game.")) {
+        if (this.invoking.name().startsWith("game.")) {
+            System.out.println(this.invoking.name());
             ctx.codeBlocks().add(new GameAction(actionType.name()).setArguments(arguments));
         }
-        if (this.invoking.name().contains("gameEvent.")) {
+        if (this.invoking.name().startsWith("gameEvent.")) {
             ctx.codeBlocks().add(new GameEvent(
                     actionType.name(),
                     false
@@ -223,15 +224,15 @@ public record Invoke(
         }
 
         // vars blocks
-        if(this.invoking.name().contains("vars.")) {
+        if(this.invoking.name().startsWith("vars.")) {
             ctx.codeBlocks().add(new SetVariable(actionType.name()).setArguments(arguments));
         }
-        if(this.invoking.name().contains("ifVars.")) {
+        if(this.invoking.name().startsWith("ifVars.")) {
             ctx.codeBlocks().add(new IfVariable(actionType.name(), false).setArguments(arguments));
         }
 
         // funcs and procs
-        if(this.invoking.name().contains("func.")) {
+        if(this.invoking.name().startsWith("func.")) {
             var newName = this.invoking.name().replaceFirst("func\\.", "");
             if(this.childBlock.isPresent()) {
                 ctx.codeBlocks().add(new Function(newName).setArguments(arguments));
@@ -239,7 +240,7 @@ public record Invoke(
                 ctx.codeBlocks().add(new CallFunction(newName).setArguments(arguments));
             }
         }
-        if(this.invoking.name().contains("proc.")) {
+        if(this.invoking.name().startsWith("proc.")) {
             var newName = this.invoking.name().replaceFirst("proc\\.", "");
             if(this.childBlock.isPresent()) {
                 ctx.codeBlocks().add(new Process(newName).setArguments(arguments));
@@ -249,7 +250,7 @@ public record Invoke(
         }
 
         // control flow blocks
-        if (this.invoking.name().contains("repeat.")) {
+        if (this.invoking.name().startsWith("repeat.")) {
             var cb = new Repeat(
                     actionType.name(),
                     "",
@@ -268,7 +269,7 @@ public record Invoke(
             }
             ctx.codeBlocks().add(cb);
         }
-        if (this.invoking.name().contains("select.")) {
+        if (this.invoking.name().startsWith("select.")) {
             var cb = new SelectObject(
                     actionType.name(),
                     "",
@@ -282,7 +283,7 @@ public record Invoke(
             }
             ctx.codeBlocks().add(cb);
         }
-        if (this.invoking.name().contains("control.")) {
+        if (this.invoking.name().startsWith("control.")) {
             ctx.codeBlocks().add(new Control(actionType.name()).setArguments(arguments));
         }
         this.childBlock.ifPresent(childBlock -> {

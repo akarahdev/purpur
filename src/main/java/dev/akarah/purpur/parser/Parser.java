@@ -224,14 +224,26 @@ public class Parser {
                         ));
                     }
                 }
-                yield new LocationLiteral(
-                        Double.parseDouble(((Number) args.get(0)).literal()),
-                        Double.parseDouble(((Number) args.get(1)).literal()),
-                        Double.parseDouble(((Number) args.get(2)).literal()),
-                        Double.parseDouble(((Number) args.get(3)).literal()),
-                        Double.parseDouble(((Number) args.get(4)).literal()),
-                        locKeyword.spanData()
-                );
+                if(args.size() == 5) {
+
+                    yield new LocationLiteral(
+                            Double.parseDouble(((Number) args.get(0)).literal()),
+                            Double.parseDouble(((Number) args.get(1)).literal()),
+                            Double.parseDouble(((Number) args.get(2)).literal()),
+                            Double.parseDouble(((Number) args.get(3)).literal()),
+                            Double.parseDouble(((Number) args.get(4)).literal()),
+                            locKeyword.spanData()
+                    );
+                } else {
+                    yield new LocationLiteral(
+                            Double.parseDouble(((Number) args.get(0)).literal()),
+                            Double.parseDouble(((Number) args.get(1)).literal()),
+                            Double.parseDouble(((Number) args.get(2)).literal()),
+                            0,
+                            0,
+                            locKeyword.spanData()
+                    );
+                }
             }
             case TokenTree.VecKeyword vecKeyword -> {
                 var args = parseValues();
