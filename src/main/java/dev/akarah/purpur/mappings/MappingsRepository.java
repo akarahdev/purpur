@@ -4,6 +4,7 @@ import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import dev.dfonline.flint.actiondump.ActionDump;
 import dev.dfonline.flint.actiondump.codeblocks.ActionType;
+import net.kyori.adventure.text.serializer.plain.PlainTextComponentSerializer;
 import org.apache.commons.text.CaseUtils;
 import org.jspecify.annotations.NonNull;
 import org.jspecify.annotations.Nullable;
@@ -265,8 +266,7 @@ public class MappingsRepository {
         for(var gameValue : dump.gameValues()) {
             var targets = List.of("Selection", "Default", "Killer", "Damager", "Victim", "Shooter", "Projectile", "Last-Spawned Entity", "NO_TARGET");
             for(var target : targets) {
-                var name = gameValue.icon().name()
-                        .replaceAll("<(.*?)>", "");
+                var name = PlainTextComponentSerializer.plainText().serialize(gameValue.icon().name());
                 var dfVal = new DfGameValue(name, target);
                 var scriptVal = new ScriptGameValue(
                         CaseUtils.toCamelCase(name.replace("-", " "), false, ' '),
@@ -287,7 +287,7 @@ public class MappingsRepository {
         INSTANCE.dfSoundToScript.clear();
 
         for(var sound : dump.sounds()) {
-            var iconName = sound.icon().name().replaceAll("<(.*?)>", "");
+            var iconName = PlainTextComponentSerializer.plainText().serialize(sound.icon().name());
             if(sound.variants() != null) {
                 for(var variant : sound.variants()) {
                     var scriptId = new ScriptSound(
