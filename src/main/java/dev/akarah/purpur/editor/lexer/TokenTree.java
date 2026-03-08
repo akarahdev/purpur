@@ -188,6 +188,12 @@ public interface TokenTree {
             return "?";
         }
     }
+    record Exclamation(SpanData spanData) implements TokenTree {
+        @Override
+        public @NonNull String toString() {
+            return "!";
+        }
+    }
     record At(SpanData spanData) implements TokenTree {
         @Override
         public @NonNull String toString() {

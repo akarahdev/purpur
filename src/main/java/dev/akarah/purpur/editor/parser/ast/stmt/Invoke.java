@@ -25,10 +25,11 @@ public record Invoke(
         Optional<Variable> subInvoking,
         List<Value> arguments,
         Optional<Block> childBlock,
-        Optional<String> target
+        Optional<String> target,
+        boolean not
 ) implements Statement {
     public Invoke withChildBlock(Block block) {
-        return new Invoke(invoking, subInvoking, arguments, Optional.of(block), target);
+        return new Invoke(invoking, subInvoking, arguments, Optional.of(block), target, not);
     }
 
     @Override
@@ -54,6 +55,10 @@ public record Invoke(
             builder.append("]");
         });
 
+
+        if(this.not) {
+            builder.append("!");
+        }
 
         builder.append("(");
 
@@ -193,6 +198,7 @@ public record Invoke(
                     PlayerTarget.NONE,
                     false
             );
+            ifp.setNot(this.not);
             ifp.setArguments(arguments);
             ifp.setTarget(PlayerTarget.fromString(this.target.orElse("")));
             ctx.codeBlocks().add(ifp);
@@ -221,16 +227,20 @@ public record Invoke(
                     false
             );
             // TODO: add target setting for if entity
+            ie.setNot(this.not);
             ie.setArguments(arguments);
             ctx.codeBlocks().add(ie);
         }
 
         // game blocks
         if (this.invoking.name().startsWith("ifGame.")) {
-            ctx.codeBlocks().add(new IfGame(
+            var ifg = new IfGame(
                     actionType.name(),
                     false
-            ).setArguments(arguments));
+            );
+            ifg.setNot(this.not);
+            ifg.setArguments(arguments);
+            ctx.codeBlocks().add(ifg);
         }
         if (this.invoking.name().startsWith("game.")) {
             System.out.println(this.invoking.name());
@@ -301,6 +311,7 @@ public record Invoke(
                         MappingsRepository.get().actionTypeToDfSubActionsMap().get(blockTagActionType)
                 );
             }
+            cb.setNot(this.not);
             ctx.codeBlocks().add(cb);
         }
         if (this.invoking.name().startsWith("control.")) {

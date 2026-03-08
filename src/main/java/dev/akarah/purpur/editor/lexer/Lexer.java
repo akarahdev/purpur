@@ -134,6 +134,11 @@ public class Lexer {
             expect('?');
             return new TokenTree.Question(this.endSpan(start));
         }
+        if(stringReader.peek() == '!') {
+            var start = this.stringReader.getCursor();
+            expect('!');
+            return new TokenTree.Exclamation(this.endSpan(start));
+        }
         if(stringReader.peek() == '@') {
             var start = this.stringReader.getCursor();
             expect('@');

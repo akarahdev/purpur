@@ -11,6 +11,7 @@ import dev.dfonline.flint.templates.argument.TagArgument;
 import dev.dfonline.flint.templates.codeblock.*;
 import dev.dfonline.flint.templates.codeblock.Process;
 import dev.dfonline.flint.templates.codeblock.abstracts.CodeBlockAction;
+import dev.dfonline.flint.templates.codeblock.abstracts.CodeBlockIfStatement;
 import dev.dfonline.flint.templates.codeblock.abstracts.CodeBlockSubAction;
 
 import java.util.List;
@@ -47,7 +48,8 @@ public class CodeBlockDecompiler {
                                 .map(VarItemDecompiler::decompile)
                                 .toList(),
                         Optional.empty(),
-                        Optional.empty()
+                        Optional.empty(),
+                        false
                 );
             }
             case Process process -> {
@@ -59,7 +61,8 @@ public class CodeBlockDecompiler {
                                 .map(VarItemDecompiler::decompile)
                                 .toList(),
                         Optional.empty(),
-                        Optional.empty()
+                        Optional.empty(),
+                        false
                 );
             }
             case CallFunction callFunction -> {
@@ -71,7 +74,8 @@ public class CodeBlockDecompiler {
                                 .map(VarItemDecompiler::decompile)
                                 .toList(),
                         Optional.empty(),
-                        Optional.empty()
+                        Optional.empty(),
+                        false
                 );
             }
             case StartProcess startProcess -> {
@@ -83,7 +87,8 @@ public class CodeBlockDecompiler {
                                 .map(VarItemDecompiler::decompile)
                                 .toList(),
                         Optional.empty(),
-                        Optional.empty()
+                        Optional.empty(),
+                        false
                 );
             }
             case PlayerEvent playerEvent -> {
@@ -94,7 +99,8 @@ public class CodeBlockDecompiler {
                         Optional.empty(),
                         List.of(),
                         Optional.empty(),
-                        Optional.empty()
+                        Optional.empty(),
+                        false
                 );
             }
             case EntityEvent entityEvent -> {
@@ -105,7 +111,8 @@ public class CodeBlockDecompiler {
                         Optional.empty(),
                         List.of(),
                         Optional.empty(),
-                        Optional.empty()
+                        Optional.empty(),
+                        false
                 );
             }
             case GameEvent gameEvent -> {
@@ -116,7 +123,8 @@ public class CodeBlockDecompiler {
                         Optional.empty(),
                         List.of(),
                         Optional.empty(),
-                        Optional.empty()
+                        Optional.empty(),
+                        false
                 );
             }
             case CodeBlockSubAction action -> {
@@ -137,7 +145,8 @@ public class CodeBlockDecompiler {
                         Optional.empty(),
                         List.of(),
                         Optional.empty(),
-                        Optional.empty()
+                        Optional.empty(),
+                        false
                 );
             }
             default -> {
@@ -146,7 +155,8 @@ public class CodeBlockDecompiler {
                         Optional.empty(),
                         List.of(),
                         Optional.empty(),
-                        Optional.empty()
+                        Optional.empty(),
+                        false
                 );
             }
         }
@@ -194,12 +204,18 @@ public class CodeBlockDecompiler {
             default -> Optional.empty();
         };
 
+        boolean not = false;
+        if(action instanceof CodeBlockIfStatement codeBlockIfStatement) {
+            not = codeBlockIfStatement.isNot();
+        }
+
         return new Invoke(
                 new Variable(scriptName.name(), "line", null),
                 Optional.empty(),
                 mapArguments(action),
                 Optional.empty(),
-                target
+                target,
+                not
         );
     }
 
@@ -234,7 +250,8 @@ public class CodeBlockDecompiler {
                         .map(dfActionType -> new Variable(subActionFunction.name(), "line", null)),
                 mapArguments(action),
                 Optional.empty(),
-                Optional.empty()
+                Optional.empty(),
+                action.isNot()
         );
     }
 }

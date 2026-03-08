@@ -63,9 +63,9 @@ public class EditorBox extends MultiLineEditBox {
                         Pattern.compile("(?<=\\.)(.*?)(?=([(<\\[\\]]))"),
                         ARGB.color(255, 255, 170, 170)
                 ),
-                // action targets
+                // symbols
                 new HighlightGroup(
-                        Pattern.compile("@[a-zA-Z_0-9?./:]+"),
+                        Pattern.compile("[@!]"),
                         ARGB.color(255, 170, 170, 255)
                 ),
                 // type hints

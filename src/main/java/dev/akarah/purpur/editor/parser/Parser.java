@@ -119,6 +119,11 @@ public class Parser {
                 }
             }
 
+            boolean not = false;
+            if(peek() instanceof TokenTree.Exclamation) {
+                expect(TokenTree.Exclamation.class);
+                not = true;
+            }
 
             var args = parseValues();
 
@@ -132,7 +137,8 @@ public class Parser {
                     subAction,
                     args,
                     block,
-                    target.map(TokenTree.Identifier::name)
+                    target.map(TokenTree.Identifier::name),
+                    not
             );
         } catch (SpannedException e) {
             this.errors.add(e);
