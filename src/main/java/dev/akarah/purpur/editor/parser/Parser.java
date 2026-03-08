@@ -434,6 +434,9 @@ public class Parser {
                 var paramName = expect(TokenTree.Identifier.class);
                 var paramTypeTokens = expect(TokenTree.Brackets.class);
 
+                var note = Optional.<String>empty();
+                var desc = Optional.<String>empty();
+                
                 boolean plural = false;
                 boolean optional = false;
                 String type = "any";
@@ -447,9 +450,12 @@ public class Parser {
                         case TokenTree.ItemKeyword itemKeyword -> type = "item";
                         case TokenTree.LocKeyword locKeyword -> type = "loc";
                         case TokenTree.VecKeyword vecKeyword -> type = "vec";
+                        case TokenTree.SoundKeyword sound -> type = "sound";
+                        case TokenTree.ParticleKeyword par -> type = "particle";
+                        case TokenTree.PotionKeyword pot -> type = "potion";
                         case TokenTree.EndOfStream end -> {}
                         default -> this.errors.add(new SpannedException(
-                                "Invalid parameter modifier " + arg.getClass().getName() + " in parameter type",
+                                "Invalid parameter modifier " + arg.getClass().getSimpleName() + " in parameter type",
                                 arg.spanData()
                         ));
                     }

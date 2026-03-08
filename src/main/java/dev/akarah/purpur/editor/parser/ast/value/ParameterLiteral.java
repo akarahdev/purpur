@@ -5,9 +5,11 @@ import dev.akarah.purpur.editor.parser.CodegenContext;
 import dev.dfonline.flint.actiondump.codeblocks.ActionType;
 import dev.dfonline.flint.templates.argument.ParameterArgument;
 import dev.dfonline.flint.templates.argument.abstracts.Argument;
+import net.minecraft.network.chat.Component;
 import org.jspecify.annotations.Nullable;
 
 public record ParameterLiteral(String name, String type, boolean plural, boolean optional,
+                               String description, Component note,
                                @Nullable Value defaultValue,
                                SpanData spanData) implements Value {
     @Override
