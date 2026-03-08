@@ -1,7 +1,7 @@
 package dev.akarah.purpur;
 
-import dev.akarah.purpur.editor.TextEditorCommandsFeature;
-import dev.akarah.purpur.mappings.MappingsRepository;
+import dev.akarah.purpur.editor.ui.TextEditorCommandsFeature;
+import dev.akarah.purpur.editor.mappings.MappingsRepository;
 import dev.dfonline.flint.FlintAPI;
 import net.fabricmc.api.ClientModInitializer;
 import net.fabricmc.api.ModInitializer;
