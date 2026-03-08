@@ -24,10 +24,11 @@ public record Invoke(
         Variable invoking,
         Optional<Variable> subInvoking,
         List<Value> arguments,
-        Optional<Block> childBlock
+        Optional<Block> childBlock,
+        Optional<String> target
 ) implements Statement {
     public Invoke withChildBlock(Block block) {
-        return new Invoke(invoking, subInvoking, arguments, Optional.of(block));
+        return new Invoke(invoking, subInvoking, arguments, Optional.of(block), target);
     }
 
     @Override
@@ -39,6 +40,13 @@ public record Invoke(
             return;
         }
         invoking.lowerToParsable(builder, depth);
+
+        target.ifPresent(targ -> {
+            if(!targ.isEmpty()) {
+                builder.append("@");
+                builder.append(targ);
+            }
+        });
 
         subInvoking.ifPresent(subInvoking -> {
             builder.append("[");
@@ -165,10 +173,13 @@ public record Invoke(
 
         // player blocks
         if (this.invoking.name().startsWith("player.")) {
-            ctx.codeBlocks().add(new PlayerAction(
+            var pa = new PlayerAction(
                     actionType.name(),
                     PlayerTarget.NONE
-            ).setArguments(arguments));
+            );
+            pa.setTarget(PlayerTarget.fromString(this.target.orElse("")));
+            pa.setArguments(arguments);
+            ctx.codeBlocks().add(pa);
         }
         if (this.invoking.name().startsWith("playerEvent.")) {
             ctx.codeBlocks().add(new PlayerEvent(
@@ -177,19 +188,25 @@ public record Invoke(
             ));
         }
         if (this.invoking.name().startsWith("ifPlayer.")) {
-            ctx.codeBlocks().add(new IfPlayer(
+            var ifp = new IfPlayer(
                     actionType.name(),
                     PlayerTarget.NONE,
                     false
-            ).setArguments(arguments));
+            );
+            ifp.setArguments(arguments);
+            ifp.setTarget(PlayerTarget.fromString(this.target.orElse("")));
+            ctx.codeBlocks().add(ifp);
         }
 
         // entity blocks
         if (this.invoking.name().startsWith("entity.")) {
-            ctx.codeBlocks().add(new EntityAction(
+            var ea = new EntityAction(
                     EntityTarget.NONE,
                     actionType.name()
-            ).setArguments(arguments));
+            );
+            ea.setTarget(EntityTarget.fromString(this.target.orElse("")));
+            ea.setArguments(arguments);
+            ctx.codeBlocks().add(ea);
         }
         if (this.invoking.name().startsWith("entityEvent.")) {
             ctx.codeBlocks().add(new EntityEvent(
@@ -198,11 +215,14 @@ public record Invoke(
             ));
         }
         if (this.invoking.name().startsWith("ifEntity.")) {
-            ctx.codeBlocks().add(new IfEntity(
+            var ie = new IfEntity(
                     actionType.name(),
                     EntityTarget.NONE,
                     false
-            ).setArguments(arguments));
+            );
+            // TODO: add target setting for if entity
+            ie.setArguments(arguments);
+            ctx.codeBlocks().add(ie);
         }
 
         // game blocks

@@ -93,6 +93,11 @@ public class Parser {
     public @Nullable Invoke parseInvoke() {
         try {
             var ident = expect(TokenTree.Identifier.class);
+            var target = Optional.<TokenTree.Identifier>empty();
+            if(peek() instanceof TokenTree.At) {
+                expect(TokenTree.At.class);
+                target = Optional.of(expect(TokenTree.Identifier.class));
+            }
 
             var subAction = Optional.<Variable>empty();
             if(peek() instanceof TokenTree.Brackets) {
@@ -126,7 +131,8 @@ public class Parser {
                     new Variable(ident.name(), "line", ident.spanData()),
                     subAction,
                     args,
-                    block
+                    block,
+                    target.map(TokenTree.Identifier::name)
             );
         } catch (SpannedException e) {
             this.errors.add(e);

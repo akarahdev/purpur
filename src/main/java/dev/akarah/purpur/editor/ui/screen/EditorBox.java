@@ -63,6 +63,11 @@ public class EditorBox extends MultiLineEditBox {
                         Pattern.compile("(?<=\\.)(.*?)(?=([(<\\[\\]]))"),
                         ARGB.color(255, 255, 170, 170)
                 ),
+                // action targets
+                new HighlightGroup(
+                        Pattern.compile("@[a-zA-Z_0-9?./:]+"),
+                        ARGB.color(255, 170, 170, 255)
+                ),
                 // type hints
                 new HighlightGroup(
                         Pattern.compile("(?<=\\[(plural )?(optional )?)(number|string|text|location|vector|sound|particle|potion|item|any|variable|list|dict)(?=])"),
@@ -108,7 +113,7 @@ public class EditorBox extends MultiLineEditBox {
         );
     }
 
-    record HighlightGroup(Pattern pattern, int color) {}
+    public record HighlightGroup(Pattern pattern, int color) {}
 
     // eventually will be `purpur:code` when i feel like fixing it
     public static FontDescription OUR_FONT = new FontDescription.Resource(Identifier.fromNamespaceAndPath("minecraft", "default"));

@@ -46,6 +46,7 @@ public class CodeBlockDecompiler {
                                 .stream()
                                 .map(VarItemDecompiler::decompile)
                                 .toList(),
+                        Optional.empty(),
                         Optional.empty()
                 );
             }
@@ -57,6 +58,7 @@ public class CodeBlockDecompiler {
                                 .stream()
                                 .map(VarItemDecompiler::decompile)
                                 .toList(),
+                        Optional.empty(),
                         Optional.empty()
                 );
             }
@@ -68,6 +70,7 @@ public class CodeBlockDecompiler {
                                 .stream()
                                 .map(VarItemDecompiler::decompile)
                                 .toList(),
+                        Optional.empty(),
                         Optional.empty()
                 );
             }
@@ -79,6 +82,7 @@ public class CodeBlockDecompiler {
                                 .stream()
                                 .map(VarItemDecompiler::decompile)
                                 .toList(),
+                        Optional.empty(),
                         Optional.empty()
                 );
             }
@@ -89,6 +93,7 @@ public class CodeBlockDecompiler {
                         new Variable(scriptName.name(), "line", null),
                         Optional.empty(),
                         List.of(),
+                        Optional.empty(),
                         Optional.empty()
                 );
             }
@@ -99,16 +104,18 @@ public class CodeBlockDecompiler {
                         new Variable(scriptName.name(), "line", null),
                         Optional.empty(),
                         List.of(),
+                        Optional.empty(),
                         Optional.empty()
                 );
             }
-            case GameEvent entityEvent -> {
-                var dfName = new MappingsRepository.DfFunction("GAME EVENT", entityEvent.getAction());
+            case GameEvent gameEvent -> {
+                var dfName = new MappingsRepository.DfFunction("GAME EVENT", gameEvent.getAction());
                 var scriptName = MappingsRepository.get().getScriptFunction(dfName);
                 return new Invoke(
                         new Variable(scriptName.name(), "line", null),
                         Optional.empty(),
                         List.of(),
+                        Optional.empty(),
                         Optional.empty()
                 );
             }
@@ -129,6 +136,7 @@ public class CodeBlockDecompiler {
                         new Variable("else", "line", null),
                         Optional.empty(),
                         List.of(),
+                        Optional.empty(),
                         Optional.empty()
                 );
             }
@@ -137,6 +145,7 @@ public class CodeBlockDecompiler {
                         new Variable("?", "line", null),
                         Optional.empty(),
                         List.of(),
+                        Optional.empty(),
                         Optional.empty()
                 );
             }
@@ -176,11 +185,21 @@ public class CodeBlockDecompiler {
         }
         var dfName = createDfFunction(action);
         var scriptName = MappingsRepository.get().getScriptFunction(dfName);
+
+        Optional<String> target = switch (action) {
+            case PlayerAction ac -> Optional.of(ac.getTarget().name);
+            case EntityAction ac -> Optional.of(ac.getTarget().name);
+            case IfPlayer ac -> Optional.of(ac.getTarget().name);
+            case IfEntity ac -> Optional.of(ac.getTarget().name);
+            default -> Optional.empty();
+        };
+
         return new Invoke(
                 new Variable(scriptName.name(), "line", null),
                 Optional.empty(),
                 mapArguments(action),
-                Optional.empty()
+                Optional.empty(),
+                target
         );
     }
 
@@ -214,6 +233,7 @@ public class CodeBlockDecompiler {
                 Optional.ofNullable(dfSubAction)
                         .map(dfActionType -> new Variable(subActionFunction.name(), "line", null)),
                 mapArguments(action),
+                Optional.empty(),
                 Optional.empty()
         );
     }
