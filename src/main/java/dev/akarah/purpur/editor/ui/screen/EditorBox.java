@@ -80,7 +80,7 @@ public class EditorBox extends MultiLineEditBox {
                 ),
                 // strings
                 new HighlightGroup(
-                        Pattern.compile("\"(.*?)\""),
+                        Pattern.compile("(\"(.*?)\")|('(.*?)')"),
                         ARGB.color(255, 140, 255, 140)
                 ),
                 // % codes

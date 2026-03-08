@@ -100,7 +100,7 @@ public class Lexer {
                 default -> new TokenTree.Identifier(sb.toString(), this.endSpan(start));
             };
         }
-        if(stringReader.peek() == '"') {
+        if(stringReader.peek() == '"' || stringReader.peek() == '\'') {
             var start = this.stringReader.getCursor();
             return new TokenTree.StringLiteral(parseStringLiteral(), this.endSpan(start));
         }
