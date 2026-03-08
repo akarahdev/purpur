@@ -262,7 +262,7 @@ public class MappingsRepository {
         }
 
         for(var gameValue : dump.gameValues()) {
-            var targets = List.of("Selection", "Default", "Killer", "Damager", "Victim", "Shooter", "Projectile", "Last-Spawned Entity", "NO_TARGET");
+            var targets = List.of("Selection", "Default", "Killer", "Damager", "Victim", "Shooter", "Projectile", "LastEntity", "NO_TARGET");
             for(var target : targets) {
                 var name = PlainTextComponentSerializer.plainText().serialize(gameValue.icon().name());
                 var dfVal = new DfGameValue(name, target);
@@ -270,7 +270,7 @@ public class MappingsRepository {
                         CaseUtils.toCamelCase(name.replace("-", " "), false, ' '),
                         CaseUtils.toCamelCase(
                                 target
-                                        .replace("-", "")
+                                        .replace("LastEntity", "last")
                                         .replace("NO_TARGET", "plot"),
                                 false,
                                 ' '

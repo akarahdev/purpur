@@ -216,7 +216,7 @@ public class Parser {
                     ));
                     yield null;
                 }
-                yield new GameValue(split[0], split[1], ident.spanData());
+                yield new GameValue(split[1], split[0], ident.spanData());
             }
             case TokenTree.LocKeyword locKeyword -> {
                 var args = parseValues();

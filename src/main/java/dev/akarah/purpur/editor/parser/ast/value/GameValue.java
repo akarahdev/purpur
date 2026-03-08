@@ -19,7 +19,7 @@ public record GameValue(String value, String target, SpanData spanData) implemen
     }
 
     public Argument createArgument(CodegenContext ctx, ActionType actionType, int argIndex) {
-        var out = MappingsRepository.get().getDfGameValue(new MappingsRepository.ScriptGameValue(target, value));
+        var out = MappingsRepository.get().getDfGameValue(new MappingsRepository.ScriptGameValue(value, target));
         if (out == null) {
             ctx.errors().add(new SpannedException(
                     this.target + "." + this.value + " is not a valid game value",
@@ -27,6 +27,8 @@ public record GameValue(String value, String target, SpanData spanData) implemen
             ));
             return new NumberArgument(argIndex, 0);
         }
-        return new GameValueArgument(argIndex, out.option(), GameValueArgument.GameValueTarget.valueOf(out.target().toUpperCase()));
+        return new GameValueArgument(argIndex, out.option(), GameValueArgument.GameValueTarget.valueOf(
+                out.target().toUpperCase().replace("LASTENTITY", "LAST_ENTITY")
+        ));
     }
 }
