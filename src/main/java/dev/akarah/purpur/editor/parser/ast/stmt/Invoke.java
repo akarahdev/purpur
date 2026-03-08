@@ -143,7 +143,7 @@ public record Invoke(
         }
 
         var arguments = new Arguments();
-        int idx = 1;
+        int idx = 0;
         var tagsWritten = Lists.newArrayList();
         for (var arg : this.arguments) {
             if(arg == null) {
