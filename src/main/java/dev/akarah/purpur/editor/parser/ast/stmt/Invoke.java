@@ -187,10 +187,12 @@ public record Invoke(
             ctx.codeBlocks().add(pa);
         }
         if (this.invoking.name().startsWith("playerEvent.")) {
-            ctx.codeBlocks().add(new PlayerEvent(
+            var pe = new PlayerEvent(
                     actionType.name(),
                     false
-            ));
+            );
+            pe.setLagslayCancelled(this.not);
+            ctx.codeBlocks().add(pe);
         }
         if (this.invoking.name().startsWith("ifPlayer.")) {
             var ifp = new IfPlayer(
@@ -215,10 +217,12 @@ public record Invoke(
             ctx.codeBlocks().add(ea);
         }
         if (this.invoking.name().startsWith("entityEvent.")) {
-            ctx.codeBlocks().add(new EntityEvent(
+            var ee = new EntityEvent(
                     actionType.name(),
                     false
-            ));
+            );
+            ee.setLagslayCancelled(this.not);
+            ctx.codeBlocks().add(ee);
         }
         if (this.invoking.name().startsWith("ifEntity.")) {
             var ie = new IfEntity(
@@ -247,10 +251,12 @@ public record Invoke(
             ctx.codeBlocks().add(new GameAction(actionType.name()).setArguments(arguments));
         }
         if (this.invoking.name().startsWith("gameEvent.")) {
-            ctx.codeBlocks().add(new GameEvent(
+            var ge = new GameEvent(
                     actionType.name(),
                     false
-            ));
+            );
+            ge.setLagslayCancelled(this.not);
+            ctx.codeBlocks().add(ge);
         }
 
         // vars blocks

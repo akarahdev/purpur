@@ -100,7 +100,7 @@ public class CodeBlockDecompiler {
                         List.of(),
                         Optional.empty(),
                         Optional.empty(),
-                        false
+                        playerEvent.isLagslayCancelled()
                 );
             }
             case EntityEvent entityEvent -> {
@@ -112,7 +112,7 @@ public class CodeBlockDecompiler {
                         List.of(),
                         Optional.empty(),
                         Optional.empty(),
-                        false
+                        playerEvent.isLagslayCancelled()
                 );
             }
             case GameEvent gameEvent -> {
@@ -124,7 +124,7 @@ public class CodeBlockDecompiler {
                         List.of(),
                         Optional.empty(),
                         Optional.empty(),
-                        false
+                        playerEvent.isLagslayCancelled()
                 );
             }
             case CodeBlockSubAction action -> {
