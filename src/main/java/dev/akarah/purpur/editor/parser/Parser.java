@@ -19,6 +19,7 @@ import net.minecraft.commands.arguments.NbtTagArgument;
 import net.minecraft.core.component.DataComponentPatch;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.nbt.*;
+import net.minecraft.network.chat.Component;
 import net.minecraft.resources.Identifier;
 import net.minecraft.resources.RegistryOps;
 import net.minecraft.world.item.ItemStack;
@@ -436,7 +437,7 @@ public class Parser {
 
                 var note = Optional.<String>empty();
                 var desc = Optional.<String>empty();
-                
+
                 boolean plural = false;
                 boolean optional = false;
                 String type = "any";
@@ -480,6 +481,8 @@ public class Parser {
                         newType.orElseThrow(),
                         plural,
                         optional,
+                        Optional.empty(),
+                        Optional.empty(),
                         defaultValue,
                         paramTypeTokens.spanData()
                 );

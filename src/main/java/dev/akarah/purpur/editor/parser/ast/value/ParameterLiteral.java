@@ -8,8 +8,10 @@ import dev.dfonline.flint.templates.argument.abstracts.Argument;
 import net.minecraft.network.chat.Component;
 import org.jspecify.annotations.Nullable;
 
+import java.util.Optional;
+
 public record ParameterLiteral(String name, String type, boolean plural, boolean optional,
-                               String description, Component note,
+                               Optional<String> description, Optional<Component> note,
                                @Nullable Value defaultValue,
                                SpanData spanData) implements Value {
     @Override

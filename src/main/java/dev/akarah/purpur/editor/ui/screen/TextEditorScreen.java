@@ -156,6 +156,8 @@ public class TextEditorScreen extends Screen {
                 .limit(10)
                 .toList();
 
+        txt.append("\n\n");
+
         this.sideText.setMessage(txt);
         this.suggestions = list;
     }

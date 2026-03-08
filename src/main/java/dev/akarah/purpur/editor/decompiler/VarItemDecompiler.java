@@ -7,6 +7,8 @@ import dev.akarah.purpur.editor.parser.ast.value.Number;
 import dev.dfonline.flint.templates.argument.*;
 import dev.dfonline.flint.templates.argument.abstracts.Argument;
 
+import java.util.Optional;
+
 public class VarItemDecompiler {
     public static Value decompile(Argument argument) {
         return switch (argument) {
@@ -43,6 +45,8 @@ public class VarItemDecompiler {
                     MappingsRepository.dfTypeToScriptType(parameterArgument.getType().name).orElse("any"),
                     parameterArgument.isPlural(),
                     parameterArgument.isOptional(),
+                    Optional.empty(),
+                    Optional.empty(),
                     parameterArgument.getDefaultValue() == null ? null : decompile(parameterArgument.getDefaultValue()),
                     null
             );

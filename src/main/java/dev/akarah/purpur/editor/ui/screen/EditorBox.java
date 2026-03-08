@@ -92,6 +92,11 @@ public class EditorBox extends MultiLineEditBox {
                 new HighlightGroup(
                         Pattern.compile("//(.*?)$"),
                         ARGB.color(255, 100, 100, 100)
+                ),
+                // special identifiers
+                new HighlightGroup(
+                        Pattern.compile("`(.*?)`"),
+                        ARGB.color(255, 255, 200, 255)
                 )
         );
     }
